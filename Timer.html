@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Nick's Countdown Timer</title>
+  <title>Custom Talking Countdown Timer</title>
   <style>
     #timer {
       font-size: 2em;
@@ -27,7 +27,7 @@
 </head>
 <body>
 
-  <h2>Nick's Countdown Timer</h2>
+  <h2>Custom Countdown Timer</h2>
 
   <div>
     <label for="minuteInput">Enter minutes: </label>
@@ -37,12 +37,8 @@
   </div>
 
   <div>
-    <label for="intervalInput">Enter interval: </label>
-    <input type="number" id="intervalInput" min="1" placeholder="Interval">
-    <select id="intervalUnit">
-      <option value="seconds">Seconds</option>
-      <option value="minutes">Minutes</option>
-    </select>
+    <label for="intervalInput">Enter interval (in seconds) to announce time: </label>
+    <input type="number" id="intervalInput" min="1" placeholder="Interval in seconds">
   </div>
 
   <div>
@@ -68,22 +64,9 @@
     let paused = false; // Track pause state
     let speechSpeed = 1; // Default speech speed is normal (1)
 
-    // Function to speak the remaining time in minutes and seconds
+    // Function to speak the remaining time
     function speakTime(time) {
-      const minutes = Math.floor(time / 60);
-      const seconds = time % 60;
-      let speechText = "";
-
-      if (minutes > 0) {
-        speechText += `${minutes} minute${minutes > 1 ? 's' : ''}`;
-      }
-      if (seconds > 0) {
-        if (minutes > 0) {
-          speechText += " and ";
-        }
-        speechText += `${seconds} second${seconds > 1 ? 's' : ''}`;
-      }
-      const msg = new SpeechSynthesisUtterance(speechText);
+      const msg = new SpeechSynthesisUtterance(`${time}`);
       msg.rate = speechSpeed; // Set the speech speed from the user input
       window.speechSynthesis.speak(msg);
     }
@@ -94,16 +77,16 @@
         // Announce every second during the last 20 seconds
         if (timeRemaining <= 20) {
           speakTime(timeRemaining); // Speak every second during last 20 seconds
-        }
+        } 
         // Otherwise, announce based on user-defined interval
         else if (timeSinceLastSpeech >= announceInterval) {
           speakTime(timeRemaining);
           timeSinceLastSpeech = 0; // Reset the counter after speaking
         }
 
-        timeRemaining--; // Decrease time by 1 second
+        timeRemaining--;
         timeSinceLastSpeech++; // Increment counter every second
-        document.getElementById("timer").textContent = `Time remaining: ${formatTime(timeRemaining)}`; // Update display
+        document.getElementById("timer").textContent = `Time remaining: ${timeRemaining} seconds`;
       } else {
         document.getElementById("timer").textContent = "Time is up!";
         speakTime("Time is up!");
@@ -112,29 +95,18 @@
       }
     }
 
-    // Format the time for display as minutes:seconds
-    function formatTime(time) {
-      const minutes = Math.floor(time / 60);
-      const seconds = time % 60;
-      return minutes > 0 ? `${minutes} minutes and ${seconds} seconds` : `${seconds} seconds`;
-    }
-
     // Start the countdown timer when the user clicks the button
     function startTimer() {
       const minutes = parseInt(document.getElementById("minuteInput").value) || 0;
       const seconds = parseInt(document.getElementById("secondInput").value) || 0;
-      const intervalInput = parseInt(document.getElementById("intervalInput").value) || 10;
-      const intervalUnit = document.getElementById("intervalUnit").value;
-
-      // Convert interval to seconds
-      announceInterval = intervalUnit === 'minutes' ? intervalInput * 60 : intervalInput;
+      announceInterval = parseInt(document.getElementById("intervalInput").value) || 10;
 
       // Calculate total time in seconds
       totalTime = minutes * 60 + seconds;
       timeRemaining = totalTime;
 
       // Display initial time
-      document.getElementById("timer").textContent = `Time remaining: ${formatTime(timeRemaining)}`;
+      document.getElementById("timer").textContent = `Time remaining: ${timeRemaining} seconds`;
 
       // Validate user input
       if (totalTime <= 0) {
@@ -177,7 +149,7 @@
     function resetTimer() {
       clearInterval(interval); // Clear the interval
       timeRemaining = totalTime; // Reset to the original time
-      document.getElementById("timer").textContent = `Time remaining: ${formatTime(timeRemaining)}`;
+      document.getElementById("timer").textContent = `Time remaining: ${timeRemaining} seconds`;
       timeSinceLastSpeech = 0; // Reset speech timer
       paused = false; // Timer is not paused
       document.getElementById("pauseButton").textContent = "Pause Timer"; // Reset button text to "Pause"
