@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Custom Talking Countdown Timer</title>
+  <style>
+    #timer {
+      font-size: 2em;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+    input {
+      font-size: 1.2em;
+      padding: 5px;
+      margin-right: 10px;
+    }
+    button {
+      font-size: 1.2em;
+      padding: 5px;
+      margin-top: 10px;
+    }
+    .slider {
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Custom Countdown Timer</h2>
+
+  <div>
+    <label for="minuteInput">Enter minutes: </label>
+    <input type="number" id="minuteInput" min="0" placeholder="Minutes">
+    <label for="secondInput">Enter seconds: </label>
+    <input type="number" id="secondInput" min="0" max="59" placeholder="Seconds">
+  </div>
+
+  <div>
+    <label for="intervalInput">Enter interval (in seconds) to announce time: </label>
+    <input type="number" id="intervalInput" min="1" placeholder="Interval in seconds">
+  </div>
+
+  <div>
+    <label for="speechSpeed">Adjust Speech Speed:</label>
+    <input type="range" id="speechSpeed" class="slider" min="0.5" max="2" step="0.1" value="1">
+    <span id="speedValue">1x</span>
+  </div>
+
+  <button onclick="startTimer()">Start Timer</button>
+  <button onclick="togglePauseTimer()" id="pauseButton">Pause Timer</button>
+  <button onclick="resetTimer()">Reset Timer</button>
+  <button onclick="stopTimer()">Stop Timer</button>
+
+  <div id="timer">Time remaining: 0 seconds</div>
+
+  <script>
+    let timeRemaining = 0;
+    let interval;
+    let announceInterval = 0;
+    let totalTime = 0;
+    let timerRunning = false;
+    let timeSinceLastSpeech = 0; // Track time since the last speech to ensure intervals are respected
+    let paused = false; // Track pause state
+    let speechSpeed = 1; // Default speech speed is normal (1)
+
+    // Function to speak the remaining time
+    function speakTime(time) {
+      const msg = new SpeechSynthesisUtterance(`${time}`);
+      msg.rate = speechSpeed; // Set the speech speed from the user input
+      window.speechSynthesis.speak(msg);
+    }
+
+    // Function to update the timer
+    function updateTimer() {
+      if (timeRemaining > 0) {
+        // Announce every second during the last 20 seconds
+        if (timeRemaining <= 20) {
+          speakTime(timeRemaining); // Speak every second during last 20 seconds
+        } 
+        // Otherwise, announce based on user-defined interval
+        else if (timeSinceLastSpeech >= announceInterval) {
+          speakTime(timeRemaining);
+          timeSinceLastSpeech = 0; // Reset the counter after speaking
+        }
+
+        timeRemaining--; // Decrease time by 1 second
+        timeSinceLastSpeech++; // Increment counter every second
+        document.getElementById("timer").textContent = `Time remaining: ${timeRemaining} seconds`; // Update display
+      } else {
+        document.getElementById("timer").textContent = "Time is up!";
+        speakTime("Time is up!");
+        clearInterval(interval); // Stop the timer
+        timerRunning = false; // Timer is no longer running
+      }
+    }
+
+    // Start the countdown timer when the user clicks the button
+    function startTimer() {
+      const minutes = parseInt(document.getElementById("minuteInput").value) || 0;
+      const seconds = parseInt(document.getElementById("secondInput").value) || 0;
+      announceInterval = parseInt(document.getElementById("intervalInput").value) || 10;
+
+      // Calculate total time in seconds
+      totalTime = minutes * 60 + seconds;
+      timeRemaining = totalTime;
+
+      // Display initial time
+      document.getElementById("timer").textContent = `Time remaining: ${timeRemaining} seconds`;
+
+      // Validate user input
+      if (totalTime <= 0) {
+        alert("Please enter a valid time greater than 0.");
+        return;
+      }
+
+      if (announceInterval <= 0) {
+        alert("Please enter a valid interval greater than 0.");
+        return;
+      }
+
+      // Start the timer interval
+      if (interval) {
+        clearInterval(interval); // Clear any previous interval
+      }
+
+      interval = setInterval(updateTimer, 1000); // Update every second
+      timerRunning = true; // Timer is running
+      paused = false; // Timer is not paused
+      document.getElementById("pauseButton").textContent = "Pause Timer"; // Ensure correct button text
+    }
+
+    // Toggle pause/unpause the timer
+    function togglePauseTimer() {
+      if (paused) {
+        // Unpause the timer
+        interval = setInterval(updateTimer, 1000); // Resume the countdown
+        document.getElementById("pauseButton").textContent = "Pause Timer"; // Change button text to "Pause"
+        paused = false;
+      } else {
+        // Pause the timer
+        clearInterval(interval); // Pause the countdown
+        document.getElementById("pauseButton").textContent = "Resume Timer"; // Change button text to "Resume"
+        paused = true;
+      }
+    }
+
+    // Reset the timer
+    function resetTimer() {
+      clearInterval(interval); // Clear the interval
+      timeRemaining = totalTime; // Reset to the original time
+      document.getElementById("timer").textContent = `Time remaining: ${timeRemaining} seconds`;
+      timeSinceLastSpeech = 0; // Reset speech timer
+      paused = false; // Timer is not paused
+      document.getElementById("pauseButton").textContent = "Pause Timer"; // Reset button text to "Pause"
+      timerRunning = false; // Timer is not running
+    }
+
+    // Stop the timer
+    function stopTimer() {
+      clearInterval(interval); // Stop the interval
+      timeRemaining = 0; // Reset remaining time
+      document.getElementById("timer").textContent = "Time remaining: 0 seconds";
+      timeSinceLastSpeech = 0; // Reset speech timer
+      paused = false; // Timer is not paused
+      document.getElementById("pauseButton").textContent = "Pause Timer"; // Reset button text to "Pause"
+      timerRunning = false; // Timer is not running
+    }
+
+    // Listen for changes to the speech speed slider and update the speed
+    document.getElementById('speechSpeed').addEventListener('input', function() {
+      speechSpeed = parseFloat(this.value); // Get the new speech speed from the slider
+      document.getElementById('speedValue').textContent = `${speechSpeed}x`; // Update the displayed speed value
+    });
+  </script>
+
+</body>
+</html>
