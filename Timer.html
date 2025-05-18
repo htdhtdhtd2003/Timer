@@ -266,31 +266,39 @@ function speakRoutineName(routineName, callback) {
     }
 
     // Display workouts in the list
-    function displayWorkouts() {
-      const workoutList = document.getElementById("workoutList");
-      workoutList.innerHTML = '';
+function displayWorkouts() {
+  const workoutList = document.getElementById("workoutList");
+  workoutList.innerHTML = '';
 
-      workouts.forEach((workout, index) => {
-        const li = document.createElement("li");
-        li.className = "workout-item";
+  workouts.forEach((workout, index) => {
+    const li = document.createElement("li");
+    li.className = "workout-item";
+    li.draggable = true;
+    li.dataset.index = index;
 
-        // Add highlight class if it's the current workout
-        if (index === currentWorkoutIndex && timerRunning) {
-          li.classList.add("highlight");
-        }
-
-li.innerHTML = `
-  <span>${workout.name}: ${workout.minutes}m ${workout.seconds}s, Interval: ${workout.interval}s</span>
-  <button onclick="editWorkout(${index})">Edit</button>
-  <button onclick="removeWorkout(${index})">Remove</button>
-  <button onclick="moveUp(${index})">Up</button>
-  <button onclick="moveDown(${index})">Down</button>
-  <button onclick="copyWorkout(${index})">Copy</button> <!-- ✅ New -->
-`;
-
-        workoutList.appendChild(li);
-      });
+    if (index === currentWorkoutIndex && timerRunning) {
+      li.classList.add("highlight");
     }
+
+    li.innerHTML = `
+      <span>${workout.name}: ${workout.minutes}m ${workout.seconds}s, Interval: ${workout.interval}s</span>
+      <button onclick="editWorkout(${index})">Edit</button>
+      <button onclick="removeWorkout(${index})">Remove</button>
+
+      
+      <button onclick="copyWorkout(${index})">Copy</button>
+    `;
+
+    // Drag events
+    li.addEventListener('dragstart', handleDragStart);
+    li.addEventListener('dragover', handleDragOver);
+    li.addEventListener('drop', handleDrop);
+    li.addEventListener('dragend', handleDragEnd);
+
+    workoutList.appendChild(li);
+  });
+}
+
 
     // Edit a workout from the list
     function editWorkout(index) {
@@ -306,6 +314,8 @@ li.innerHTML = `
       addButton.setAttribute("onclick", `addWorkout()`);
 
       editingIndex = index;
+      // 👉 Set focus to the workout name input
+  document.getElementById("workoutName").focus();
     }
 
     // Remove a workout from the list
@@ -458,6 +468,39 @@ function toggleTopControls() {
   const controls = document.getElementById('topControls');
   controls.style.display = controls.style.display === 'none' ? 'block' : 'none';
 }
+
+
+let draggedIndex = null;
+
+function handleDragStart(e) {
+  draggedIndex = +this.dataset.index;
+  this.style.opacity = '0.5';
+}
+
+function handleDragOver(e) {
+  e.preventDefault(); // Necessary to allow drop
+  this.style.borderTop = '2px dashed #000';
+}
+
+function handleDrop(e) {
+  e.preventDefault();
+  const targetIndex = +this.dataset.index;
+
+  if (draggedIndex !== null && draggedIndex !== targetIndex) {
+    const [movedWorkout] = workouts.splice(draggedIndex, 1);
+    workouts.splice(targetIndex, 0, movedWorkout);
+    saveWorkouts();
+    displayWorkouts();
+  }
+}
+
+function handleDragEnd(e) {
+  this.style.opacity = '1';
+  document.querySelectorAll('.workout-item').forEach(item => {
+    item.style.borderTop = '';
+  });
+}
+
 
 
   </script>
