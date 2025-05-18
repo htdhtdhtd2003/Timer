@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Nick's Timer</title>
+  <title>Workout Timer with Multiple Routines</title>
   <style>
     #timer {
       font-size: 2em;
@@ -39,47 +39,56 @@
       background-color: #dff0d8;
       font-weight: bold;
     }
+    .hide-buttons .workout-item button {
+       display: none;
+    }
+
   </style>
 </head>
 <body>
+  <!-- Toggle Button -->
+  <button onclick="toggleTopControls()">Show/Hide Controls</button>
 
-  <h2>Nick's Workout Timer</h2>
+  <!-- Wrapper for everything above the workout buttons -->
+  <div id="topControls">
+    <h2>Custom Workout Timer</h2>
 
-  <div>
-    <label for="workoutName">Workout Name: </label>
-    <input type="text" id="workoutName" placeholder="Enter Workout Name">
-    <label for="minuteInput">Enter minutes: </label>
-    <input type="number" id="minuteInput" min="0" placeholder="Minutes">
-    <label for="secondInput">Enter seconds: </label>
-    <input type="number" id="secondInput" min="0" max="59" placeholder="Seconds">
-    <label for="intervalInput">Enter interval (in seconds) to announce time: </label>
-    <input type="number" id="intervalInput" min="1" placeholder="Interval in seconds">
-    <button onclick="addWorkout()">Add Workout</button>
+    <div id="inputSection">
+      <label for="workoutName">Workout Name: </label>
+      <input type="text" id="workoutName" placeholder="Enter Workout Name">
+      <label for="minuteInput">Enter minutes: </label>
+      <input type="number" id="minuteInput" min="0" placeholder="Minutes">
+      <label for="secondInput">Enter seconds: </label>
+      <input type="number" id="secondInput" min="0" max="59" placeholder="Seconds">
+      <label for="intervalInput">Enter interval (in seconds) to announce time: </label>
+      <input type="number" id="intervalInput" min="1" placeholder="Interval in seconds">
+      <button onclick="addWorkout()">Add Workout</button>
+    </div>
+
+    <div>
+      <label for="speechSpeed">Adjust Speech Speed:</label>
+      <input type="range" id="speechSpeed" class="slider" min="0.5" max="2" step="0.1" value="1">
+      <span id="speedValue">1x</span>
+      <br>
+      <button onclick="exportWorkouts()">Export Workouts</button>
+      <input type="file" id="importFile" onchange="importWorkouts(event)" style="display: none;">
+      <button onclick="document.getElementById('importFile').click();">Import Workouts</button>
+      <br><br>
+    </div>
   </div>
 
-  <div>
-    <label for="speechSpeed">Adjust Speech Speed:</label>
-    <input type="range" id="speechSpeed" class="slider" min="0.5" max="2" step="0.1" value="1">
-    <span id="speedValue">1x</span>
-  <br>
-  <button onclick="exportWorkouts()">Export Workouts</button>
-<input type="file" id="importFile" onchange="importWorkouts(event)" style="display: none;">
-<button onclick="document.getElementById('importFile').click();">Import Workouts</button>
-
-  <br>
-  <br>
-  </div>
-
+  <!-- Workout Control Buttons (remain visible) -->
   <button onclick="startWorkout()">Start Workout Routine</button>
   <button onclick="resetWorkout()">Reset Workout</button>
   <button onclick="togglePause()">Pause/Resume Routine</button>
+ 
 
   <div id="timer"></div>
-
   <div class="workout-list">
     <h3>Workout Routines</h3>
     <ul id="workoutList"></ul>
   </div>
+
 
 
   <script>
@@ -98,26 +107,28 @@
     let editingIndex = null;
 
     // Function to speak the remaining time with minutes and seconds format
-    function speakTime(time) {
-      let minutes = Math.floor(time / 60);
-      let seconds = time % 60;
+function speakTime(time) {
+  window.speechSynthesis.cancel(); // Stop any ongoing speech
 
-      let timeToAnnounce = '';
+  let minutes = Math.floor(time / 60);
+  let seconds = time % 60;
+  let timeToAnnounce = '';
 
-      if (time <= 20) {
-        timeToAnnounce = `${seconds}`;
-      } else {
-        if (minutes > 0) {
-          timeToAnnounce = `${minutes} minute${minutes > 1 ? 's' : ''} and ${seconds} second${seconds !== 1 ? 's' : ''}`;
-        } else {
-          timeToAnnounce = `${seconds} second${seconds !== 1 ? 's' : ''}`;
-        }
-      }
-
-      const msg = new SpeechSynthesisUtterance(timeToAnnounce);
-      msg.rate = speechSpeed;
-      window.speechSynthesis.speak(msg);
+  if (time <= 20) {
+    timeToAnnounce = `${seconds}`;
+  } else {
+    if (minutes > 0) {
+      timeToAnnounce = `${minutes} minute${minutes > 1 ? 's' : ''} and ${seconds} second${seconds !== 1 ? 's' : ''}`;
+    } else {
+      timeToAnnounce = `${seconds} second${seconds !== 1 ? 's' : ''}`;
     }
+  }
+
+  const msg = new SpeechSynthesisUtterance(timeToAnnounce);
+  msg.rate = speechSpeed;
+  window.speechSynthesis.speak(msg);
+}
+
 
     // Function to format the time in mm:ss format
     function formatTime(time) {
@@ -134,7 +145,7 @@
           speakTime("Time is up!");
           clearInterval(interval);
           timerRunning = false;
-
+             displayWorkouts();
           // Prepare for the next workout routine
           currentWorkoutIndex++;
 
@@ -250,29 +261,34 @@
     }
 
     // Display workouts in the list
-    function displayWorkouts() {
-      const workoutList = document.getElementById("workoutList");
-      workoutList.innerHTML = '';
+function displayWorkouts() {
+  const workoutList = document.getElementById("workoutList");
+  workoutList.innerHTML = '';
 
-      workouts.forEach((workout, index) => {
-        const li = document.createElement("li");
-        li.className = "workout-item";
+  const hideButtons = timerRunning; // Use this to conditionally hide buttons
 
-        // Add highlight class if it's the current workout
-        if (index === currentWorkoutIndex && timerRunning) {
-          li.classList.add("highlight");
-        }
+  workouts.forEach((workout, index) => {
+    const li = document.createElement("li");
+    li.className = "workout-item";
+    if (hideButtons) li.classList.add("hide-buttons"); // Apply class when running
 
-        li.innerHTML = `
-          <span>${workout.name}: ${workout.minutes}m ${workout.seconds}s, Interval: ${workout.interval}s</span>
-          <button onclick="editWorkout(${index})">Edit</button>
-          <button onclick="removeWorkout(${index})">Remove</button>
-          <button onclick="moveUp(${index})">Up</button>
-          <button onclick="moveDown(${index})">Down</button>
-        `;
-        workoutList.appendChild(li);
-      });
+    if (index === currentWorkoutIndex && timerRunning) {
+      li.classList.add("highlight");
     }
+
+    li.innerHTML = `
+      <span>${workout.name}: ${workout.minutes}m ${workout.seconds}s, Interval: ${workout.interval}s</span>
+      <button onclick="editWorkout(${index})">Edit</button>
+      <button onclick="removeWorkout(${index})">Remove</button>
+      <button onclick="moveUp(${index})">Up</button>
+      <button onclick="moveDown(${index})">Down</button>
+      <button onclick="copyWorkout(${index})">Copy</button>
+    `;
+
+    workoutList.appendChild(li);
+  });
+}
+
 
     // Edit a workout from the list
     function editWorkout(index) {
@@ -333,7 +349,13 @@
         alert("Please add some routines first!");
         return;
       }
+      if (timerRunning) {
+  alert("A routine is already running. Please reset before starting a new one.");
+  return;
+}
+
       currentWorkoutIndex = 0;
+  //toggleTopControls();
       startNextWorkout();
     }
 
@@ -343,19 +365,26 @@
       document.getElementById("timer").textContent = "";
       currentWorkoutIndex = 0;
       timerRunning = false;
+       displayWorkouts();
       routinePaused = false;
+      window.speechSynthesis.cancel();
+
     }
 
     // Toggle pause/resume
-    function togglePause() {
-      if (routinePaused) {
-        interval = setInterval(updateTimer, 1000);
-        routinePaused = false;
-      } else {
-        clearInterval(interval);
-        routinePaused = true;
-      }
-    }
+function togglePause() {
+  const pauseBtn = document.querySelector("button[onclick='togglePause()']");
+  if (routinePaused) {
+    interval = setInterval(updateTimer, 1000);
+    routinePaused = false;
+    pauseBtn.textContent = "Pause Routine";
+  } else {
+    clearInterval(interval);
+    routinePaused = true;
+    pauseBtn.textContent = "Resume Routine";
+  }
+}
+
 
     // Initialize the app
     displayWorkouts();
@@ -407,6 +436,28 @@ function importWorkouts(event) {
     reader.readAsText(file); // Read the file as text
   }
 }
+
+
+function copyWorkout(index) {
+  const workoutToCopy = workouts[index];
+
+  const copiedWorkout = {
+    name: workoutToCopy.name + "",
+    minutes: workoutToCopy.minutes,
+    seconds: workoutToCopy.seconds,
+    interval: workoutToCopy.interval
+  };
+
+  workouts.splice(index + 1, 0, copiedWorkout); // Insert after the original
+  saveWorkouts();
+  displayWorkouts();
+}
+
+function toggleTopControls() {
+  const controls = document.getElementById('topControls');
+  controls.style.display = controls.style.display === 'none' ? 'block' : 'none';
+}
+
 
   </script>
 
