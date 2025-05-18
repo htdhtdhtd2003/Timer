@@ -39,10 +39,6 @@
       background-color: #dff0d8;
       font-weight: bold;
     }
-    .hide-buttons .workout-item button {
-       display: none;
-    }
-
   </style>
 </head>
 <body>
@@ -145,7 +141,7 @@ function speakTime(time) {
           speakTime("Time is up!");
           clearInterval(interval);
           timerRunning = false;
-             displayWorkouts();
+
           // Prepare for the next workout routine
           currentWorkoutIndex++;
 
@@ -194,29 +190,38 @@ function speakTime(time) {
     }
 
     // Start the next workout in the routine
-    function startNextWorkout() {
-      const workout = workouts[currentWorkoutIndex];
-      announceInterval = workout.interval;
-      totalTime = workout.minutes * 60 + workout.seconds;
-      timeRemaining = totalTime;
+function startNextWorkout() {
+  const workout = workouts[currentWorkoutIndex];
+  announceInterval = workout.interval;
+  totalTime = workout.minutes * 60 + workout.seconds;
+  timeRemaining = totalTime;
 
-      if (isNaN(timeRemaining) || timeRemaining <= 0) {
-        alert("Invalid time for this workout.");
-        return;
-      }
+  if (isNaN(timeRemaining) || timeRemaining <= 0) {
+    alert("Invalid time for this workout.");
+    return;
+  }
 
-      speakRoutineName(workout.name);
-      interval = setInterval(updateTimer, 1000);
-      timerRunning = true;
-      displayWorkouts();  // Update workout list highlight
-    }
+  speakRoutineName(workout.name, () => {
+    interval = setInterval(updateTimer, 1000);
+    timerRunning = true;
+    displayWorkouts();  // Update workout list highlight
+  });
+}
+
 
     // Function to announce the routine name
-    function speakRoutineName(routineName) {
-      const msg = new SpeechSynthesisUtterance(`, start ${routineName}`);
-      msg.rate = speechSpeed;
-      window.speechSynthesis.speak(msg);
+function speakRoutineName(routineName, callback) {
+  const msg = new SpeechSynthesisUtterance(`Start ${routineName}`);
+  msg.rate = speechSpeed;
+
+  msg.onend = function () {
+    if (typeof callback === 'function') {
+      callback();
     }
+  };
+
+  window.speechSynthesis.speak(msg);
+}
 
     // Add a new workout to the list
     function addWorkout() {
@@ -261,34 +266,31 @@ function speakTime(time) {
     }
 
     // Display workouts in the list
-function displayWorkouts() {
-  const workoutList = document.getElementById("workoutList");
-  workoutList.innerHTML = '';
+    function displayWorkouts() {
+      const workoutList = document.getElementById("workoutList");
+      workoutList.innerHTML = '';
 
-  const hideButtons = timerRunning; // Use this to conditionally hide buttons
+      workouts.forEach((workout, index) => {
+        const li = document.createElement("li");
+        li.className = "workout-item";
 
-  workouts.forEach((workout, index) => {
-    const li = document.createElement("li");
-    li.className = "workout-item";
-    if (hideButtons) li.classList.add("hide-buttons"); // Apply class when running
+        // Add highlight class if it's the current workout
+        if (index === currentWorkoutIndex && timerRunning) {
+          li.classList.add("highlight");
+        }
 
-    if (index === currentWorkoutIndex && timerRunning) {
-      li.classList.add("highlight");
+li.innerHTML = `
+  <span>${workout.name}: ${workout.minutes}m ${workout.seconds}s, Interval: ${workout.interval}s</span>
+  <button onclick="editWorkout(${index})">Edit</button>
+  <button onclick="removeWorkout(${index})">Remove</button>
+  <button onclick="moveUp(${index})">Up</button>
+  <button onclick="moveDown(${index})">Down</button>
+  <button onclick="copyWorkout(${index})">Copy</button> <!-- ✅ New -->
+`;
+
+        workoutList.appendChild(li);
+      });
     }
-
-    li.innerHTML = `
-      <span>${workout.name}: ${workout.minutes}m ${workout.seconds}s, Interval: ${workout.interval}s</span>
-      <button onclick="editWorkout(${index})">Edit</button>
-      <button onclick="removeWorkout(${index})">Remove</button>
-      <button onclick="moveUp(${index})">Up</button>
-      <button onclick="moveDown(${index})">Down</button>
-      <button onclick="copyWorkout(${index})">Copy</button>
-    `;
-
-    workoutList.appendChild(li);
-  });
-}
-
 
     // Edit a workout from the list
     function editWorkout(index) {
@@ -355,7 +357,7 @@ function displayWorkouts() {
 }
 
       currentWorkoutIndex = 0;
-  //toggleTopControls();
+toggleTopControls();
       startNextWorkout();
     }
 
@@ -365,7 +367,6 @@ function displayWorkouts() {
       document.getElementById("timer").textContent = "";
       currentWorkoutIndex = 0;
       timerRunning = false;
-       displayWorkouts();
       routinePaused = false;
       window.speechSynthesis.cancel();
 
