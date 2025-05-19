@@ -71,51 +71,58 @@
       return `${m}:${s < 10 ? '0' + s : s}`;
     }
 
-    function updateTimer() {
-      if (timeRemaining <= 0) {
-        clearInterval(interval);
-        timerRunning = false;
+function updateTimer() {
+  if (timeRemaining <= 0) {
+    clearInterval(interval);
+    timerRunning = false;
 
-        if (isResting) {
-          isResting = false;
-          currentWorkoutIndex++;
-          startNextWorkout(); // Continue to next workout after rest
-        } else {
-          if (currentWorkoutIndex < workouts.length - 1) {
-            isResting = true;
-            timeRemaining = restPeriod;
-            speakText("Rest");
-            interval = setInterval(updateTimer, 1000);
-            timerRunning = true;
-          } else {
-            currentWorkoutIndex++;
-            document.getElementById("timer").textContent = "All workouts completed!";
-            speakText("All workouts completed!");
-          }
-        }
-        return;
+    if (isResting) {
+      isResting = false;
+      currentWorkoutIndex++;
+      startNextWorkout(); // Start next workout
+    } else {
+      if (currentWorkoutIndex < workouts.length - 1) {
+        isResting = true;
+        // Add 1 second if restPeriod > 0
+        timeRemaining = restPeriod > 0 ? restPeriod + 1 : 0;
+
+        const nextWorkout = workouts[currentWorkoutIndex + 1];
+        const nextName = nextWorkout ? nextWorkout.name : "the next routine";
+
+        speakText("Starting " + nextName + "will begin in ",() => {
+          interval = setInterval(updateTimer, 1000);
+          timerRunning = true;
+        });
+      } else {
+        currentWorkoutIndex++;
+        document.getElementById("timer").textContent = "All workouts completed!";
+        speakText("All workouts completed!");
       }
-
-      if (!isResting && startDelay > 0) {
-        document.getElementById("timer").textContent = `Starting in: ${startDelay}`;
-        startDelay--;
-        return;
-      }
-
-      timeRemaining--;
-
-      if (timeRemaining <= 10 || timeSinceLastSpeech >= announceInterval) {
-        speakTime(timeRemaining);
-        timeSinceLastSpeech = 0;
-      }
-
-      document.getElementById("timer").textContent = isResting
-        ? `Rest: ${formatTime(timeRemaining)}`
-        : `Time remaining: ${formatTime(timeRemaining)}`;
-
-      timeSinceLastSpeech++;
-      displayWorkouts();
     }
+    return;
+  }
+
+  if (!isResting && startDelay > 0) {
+    document.getElementById("timer").textContent = `Starting in: ${startDelay}`;
+    startDelay--;
+    return;
+  }
+
+  timeRemaining--;
+
+  if (timeRemaining <= 10 || timeSinceLastSpeech >= announceInterval) {
+    speakTime(timeRemaining);
+    timeSinceLastSpeech = 0;
+  }
+
+  document.getElementById("timer").textContent = isResting
+    ? `Rest: ${formatTime(timeRemaining)}`
+    : `Time remaining: ${formatTime(timeRemaining)}`;
+
+  timeSinceLastSpeech++;
+  displayWorkouts();
+}
+
 
     function startNextWorkout() {
       if (currentWorkoutIndex >= workouts.length) return;
