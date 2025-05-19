@@ -222,35 +222,72 @@ function updateTimer() {
       displayWorkouts();
     }
 
-    function startWorkout() {
-      if (workouts.length === 0) return alert("Add workouts first.");
-      if (timerRunning) return alert("Already running. Reset to restart.");
+function startWorkout() {
+  if (workouts.length === 0) return alert("Add workouts first.");
+  if (timerRunning) return alert("Already running. Reset to restart.");
 
-      currentWorkoutIndex = 0;
-      toggleTopControls();
-      startNextWorkout();
-    }
+  currentWorkoutIndex = 0;
+  //toggleTopControls();
+  startNextWorkout();
 
-    function resetWorkout() {
-      clearInterval(interval);
-      timerRunning = false;
-      routinePaused = false;
-      currentWorkoutIndex = 0;
-      document.getElementById("timer").textContent = '';
-      window.speechSynthesis.cancel();
-    }
+  // Enable the Pause button once the routine starts
+  document.getElementById("pauseBtn").disabled = false;
+  document.getElementById("pauseBtn").textContent = "Pause Routine";
+}
+
+
+function resetWorkout() {
+  // Clear any active intervals and timers
+  clearInterval(interval);
+  
+  // Reset workout state variables
+  timerRunning = false;
+  routinePaused = false;
+  currentWorkoutIndex = 0;
+  timeRemaining = 0;
+  timeSinceLastSpeech = 0;
+  isResting = false;
+  
+  // Reset any workout-specific variables (like speech speed and rest period)
+  speechSpeed = 1;
+  restPeriod = 5;
+  
+  // Clear the timer display and cancel speech synthesis
+  document.getElementById("timer").textContent = '';
+  window.speechSynthesis.cancel();
+  
+  // Optionally hide any controls if needed
+  //toggleTopControls();
+
+  // Reset any visual cues (like workout list highlighting)
+  displayWorkouts();
+
+  // Reset Pause button (disable it and set the text back to default)
+  document.getElementById("pauseBtn").disabled = true;
+  document.getElementById("pauseBtn").textContent = "Pause Routine";
+}
+
+
 
     function togglePause() {
-      const btn = document.getElementById("pauseBtn");
-      if (routinePaused) {
-        interval = setInterval(updateTimer, 1000);
-        btn.textContent = "Pause Routine";
-      } else {
-        clearInterval(interval);
-        btn.textContent = "Resume Routine";
-      }
-      routinePaused = !routinePaused;
-    }
+  const btn = document.getElementById("pauseBtn");
+
+  // If no workout has started, we don't want to allow pausing
+  if (!timerRunning) {
+    return alert("Start a routine first before pausing.");
+  }
+
+  if (routinePaused) {
+    interval = setInterval(updateTimer, 1000);
+    btn.textContent = "Pause Routine";
+  } else {
+    clearInterval(interval);
+    btn.textContent = "Resume Routine";
+  }
+
+  routinePaused = !routinePaused;
+}
+
 
 function setRestPeriod() {
   const val = parseInt(document.getElementById("restInput").value);
