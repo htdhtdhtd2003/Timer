@@ -1,0 +1,416 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Workout Timer</title>
+  <style>
+    #timerContainer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      padding: 20px;
+      background-color: rgba(0, 0, 0, 0.5);
+      color: white;
+      text-align: center;
+      z-index: 10;
+    }
+
+    body {
+      padding-top: 90px; /* Make room for the fixed timer */
+      font-family: Arial, sans-serif;
+    }
+
+    #timer {
+      font-size: 2em;
+      font-weight: bold;
+    }
+
+    .workout-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      background: #f0f0f0;
+      padding: 10px;
+      border-radius: 5px;
+    }
+
+    .highlight {
+      background-color: #dff0d8;
+      font-weight: bold;
+    }
+
+    input, button {
+      font-size: 1.2em;
+      padding: 5px;
+      margin: 5px;
+    }
+
+    .slider {
+      width: 100%;
+    }
+
+    #topControls {
+      display: block;
+    }
+
+    .workout-buttons {
+      display: flex;
+      gap: 10px;
+    }
+  </style>
+</head>
+<body>
+  <button onclick="toggleTopControls()">Show/Hide Controls</button>
+
+  <div id="topControls">
+    <h2>Custom Workout Timer</h2>
+    <label>Workout Name: <input type="text" id="workoutName"></label>
+    <label>Minutes: <input type="number" id="minuteInput" min="0"></label>
+    <label>Seconds: <input type="number" id="secondInput" min="0" max="59"></label>
+    <label>Announce Interval (sec): <input type="number" id="intervalInput" min="1"></label>
+    <button onclick="addWorkout()">Add Workout</button>
+
+    <br>
+    <label>Speech Speed: <input type="range" id="speechSpeed" class="slider" min="0.5" max="2" step="0.1" value="1"></label>
+    <span id="speedValue">1x</span>
+
+    <br>
+    <button onclick="exportWorkouts()">Export</button>
+    <input type="file" id="importFile" onchange="importWorkouts(event)" style="display:none;">
+    <button onclick="document.getElementById('importFile').click();">Import</button>
+  </div>
+
+  <button onclick="startWorkout()">Start Routine</button>
+  <button onclick="resetWorkout()">Reset</button>
+  <button id="pauseBtn" onclick="togglePause()">Pause Routine</button>
+
+  <label>Rest between workouts (sec): <input type="number" id="restInput" min="0" value="5" onchange="setRestPeriod()"></label>
+
+  <div id="timerContainer">
+    <div id="timer">Ready to start</div>
+  </div>
+
+  <ul id="workoutList"></ul>
+
+  <script>
+    let workouts = JSON.parse(localStorage.getItem("workouts")) || [];
+    let currentWorkoutIndex = 0, timeRemaining = 0, interval, announceInterval = 0;
+    let timerRunning = false, timeSinceLastSpeech = 0, routinePaused = false;
+    let speechSpeed = 1, restPeriod = 5, isResting = false, editingIndex = null, draggedIndex = null;
+    let startDelay = 10, resumedFromStorage = false;
+
+    function speakText(text, callback) {
+      window.speechSynthesis.cancel();
+      const msg = new SpeechSynthesisUtterance(text);
+      msg.rate = speechSpeed;
+      if (callback) msg.onend = callback;
+      window.speechSynthesis.speak(msg);
+    }
+
+    function speakTime(time) {
+      let minutes = Math.floor(time / 60);
+      let seconds = time % 60;
+      let text = time <= 20 ? `${seconds}` :
+        (minutes > 0 ? `${minutes} minute${minutes > 1 ? 's' : ''} and ${seconds} second${seconds !== 1 ? 's' : ''}` :
+          `${seconds} second${seconds !== 1 ? 's' : ''}`);
+      speakText(text);
+    }
+
+    function formatTime(time) {
+      const m = Math.floor(time / 60), s = time % 60;
+      return `${m}:${s < 10 ? '0' + s : s}`;
+    }
+
+    function updateTimer() {
+      if (timeRemaining <= 0) {
+        clearInterval(interval);
+        timerRunning = false;
+
+        if (isResting) {
+          isResting = false;
+          currentWorkoutIndex++;
+          startNextWorkout();
+        } else {
+          if (currentWorkoutIndex < workouts.length - 1) {
+            isResting = true;
+            timeRemaining = restPeriod > 0 ? restPeriod + 1 : 0;
+
+            const nextWorkout = workouts[currentWorkoutIndex + 1];
+            const nextName = nextWorkout ? nextWorkout.name : "the next routine";
+
+            speakText("Starting " + nextName + " will begin in ", () => {
+              interval = setInterval(updateTimer, 1000);
+              timerRunning = true;
+            });
+          } else {
+            currentWorkoutIndex++;
+            document.getElementById("timer").textContent = "All workouts completed!";
+            speakText("All workouts completed!");
+            localStorage.removeItem('timerState');
+          }
+        }
+        return;
+      }
+
+      if (!isResting && startDelay > 0) {
+        document.getElementById("timer").textContent = `Starting in: ${startDelay}`;
+        startDelay--;
+        return;
+      }
+
+      timeRemaining--;
+
+      if (timeRemaining <= 10 || timeSinceLastSpeech >= announceInterval) {
+        speakTime(timeRemaining);
+        timeSinceLastSpeech = 0;
+      }
+
+      document.getElementById("timer").textContent = isResting
+        ? `Rest: ${formatTime(timeRemaining)}`
+        : `Time remaining: ${formatTime(timeRemaining)}`;
+
+      timeSinceLastSpeech++;
+      saveTimerState();
+      displayWorkouts();
+    }
+
+    function startNextWorkout() {
+      if (currentWorkoutIndex >= workouts.length) return;
+
+      const workout = workouts[currentWorkoutIndex];
+      announceInterval = workout.interval;
+      timeRemaining = workout.minutes * 60 + workout.seconds;
+      startDelay = 0;
+      displayWorkouts();
+
+      speakText("Start " + workout.name, () => {
+        interval = setInterval(updateTimer, 1000);
+        timerRunning = true;
+      });
+    }
+
+    function addWorkout() {
+      const name = document.getElementById("workoutName").value;
+      const minutes = parseInt(document.getElementById("minuteInput").value) || 0;
+      const seconds = parseInt(document.getElementById("secondInput").value) || 0;
+      let interval = parseInt(document.getElementById("intervalInput").value);
+      if (!interval || interval < 1) interval = 20;
+
+      if (!name || (minutes === 0 && seconds === 0)) {
+        alert("Fill out name and time.");
+        return;
+      }
+
+      const workout = { name, minutes, seconds, interval };
+      if (editingIndex !== null) {
+        workouts[editingIndex] = workout;
+        editingIndex = null;
+      } else {
+        workouts.push(workout);
+      }
+
+      resetInputs();
+      saveWorkouts();
+      displayWorkouts();
+    }
+
+    function resetInputs() {
+      ['workoutName', 'minuteInput', 'secondInput', 'intervalInput'].forEach(id => document.getElementById(id).value = '');
+      document.querySelector("button[onclick='addWorkout()']").textContent = "Add Workout";
+    }
+
+    function saveWorkouts() {
+      localStorage.setItem("workouts", JSON.stringify(workouts));
+    }
+
+    function saveTimerState() {
+      const state = {
+        currentWorkoutIndex,
+        timeRemaining,
+        timeSinceLastSpeech,
+        isResting,
+        announceInterval,
+        speechSpeed,
+        restPeriod,
+        timerRunning: true
+      };
+      localStorage.setItem('timerState', JSON.stringify(state));
+    }
+
+    function loadTimerState() {
+      const state = JSON.parse(localStorage.getItem('timerState'));
+      if (!state || !state.timerRunning) return;
+
+      currentWorkoutIndex = state.currentWorkoutIndex;
+      timeRemaining = state.timeRemaining;
+      timeSinceLastSpeech = state.timeSinceLastSpeech;
+      isResting = state.isResting;
+      announceInterval = state.announceInterval;
+      speechSpeed = state.speechSpeed;
+      restPeriod = state.restPeriod;
+      routinePaused = true;
+
+      resumedFromStorage = true;
+
+      displayWorkouts();
+      document.getElementById("pauseBtn").disabled = false;
+      document.getElementById("pauseBtn").textContent = "Resume Routine";
+      document.getElementById("timer").textContent = isResting
+        ? `Rest: ${formatTime(timeRemaining)}`
+        : `Time remaining: ${formatTime(timeRemaining)}`;
+    }
+
+    function displayWorkouts() {
+      const list = document.getElementById("workoutList");
+      list.innerHTML = '';
+
+      workouts.forEach((w, i) => {
+        const li = document.createElement("li");
+        li.className = "workout-item";
+        li.dataset.index = i;
+        if (i === currentWorkoutIndex && (timerRunning || routinePaused)) li.classList.add("highlight");
+
+        li.innerHTML = `
+          <div class="workout-buttons">
+            <button onclick="pauseWorkout(${i})">P</button>
+            <button onclick="resumeWorkout(${i})">R</button>
+          </div>
+          <span>${w.name} - ${w.minutes}:${w.seconds < 10 ? '0' : ''}${w.seconds}</span>
+          <button onclick="editWorkout(${i})">Edit</button>
+          <button onclick="removeWorkout(${i})">Delete</button>
+          <button onclick="copyWorkout(${i})">Copy</button>
+        `;
+
+        list.appendChild(li);
+      });
+
+      // Auto scroll to highlighted workout
+      const highlightedWorkout = document.querySelector(".highlight");
+      if (highlightedWorkout) {
+        highlightedWorkout.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+
+    function pauseWorkout(index) {
+      // Pause specific workout logic
+      if (index === currentWorkoutIndex) {
+        clearInterval(interval);
+        timerRunning = false;
+      }
+    }
+
+    function resumeWorkout(index) {
+      // Resume specific workout logic
+      if (index === currentWorkoutIndex && !timerRunning) {
+        interval = setInterval(updateTimer, 1000);
+        timerRunning = true;
+      }
+    }
+
+    function editWorkout(i) {
+      const w = workouts[i];
+      document.getElementById("workoutName").value = w.name;
+      document.getElementById("minuteInput").value = w.minutes;
+      document.getElementById("secondInput").value = w.seconds;
+      document.getElementById("intervalInput").value = w.interval;
+      editingIndex = i;
+      document.querySelector("button[onclick='addWorkout()']").textContent = "Save Edit";
+    }
+
+    function removeWorkout(i) {
+      workouts.splice(i, 1);
+      saveWorkouts();
+      displayWorkouts();
+    }
+
+    function copyWorkout(i) {
+      const w = workouts[i];
+      workouts.splice(i + 1, 0, { ...w });
+      saveWorkouts();
+      displayWorkouts();
+    }
+
+    function startWorkout() {
+      if (workouts.length === 0) return alert("Add workouts first.");
+      if (timerRunning) return alert("Already running. Reset to restart.");
+
+      if (resumedFromStorage) {
+        interval = setInterval(updateTimer, 1000);
+        timerRunning = true;
+        resumedFromStorage = false;
+        return;
+      }
+
+      currentWorkoutIndex = 0;
+      startNextWorkout();
+
+      document.getElementById("pauseBtn").disabled = false;
+      document.getElementById("pauseBtn").textContent = "Pause Routine";
+    }
+
+    function resetWorkout() {
+      clearInterval(interval);
+      timerRunning = false;
+      routinePaused = false;
+      currentWorkoutIndex = 0;
+      timeRemaining = 0;
+      timeSinceLastSpeech = 0;
+      isResting = false;
+      speechSpeed = 1;
+      restPeriod = 5;
+
+      document.getElementById("timer").textContent = '';
+      window.speechSynthesis.cancel();
+
+      displayWorkouts();
+
+      document.getElementById("pauseBtn").disabled = true;
+      document.getElementById("pauseBtn").textContent = "Pause Routine";
+      localStorage.removeItem('timerState');
+    }
+
+    function togglePause() {
+      const btn = document.getElementById("pauseBtn");
+
+      if (!timerRunning) {
+        return alert("Start a routine first before pausing.");
+      }
+
+      if (routinePaused) {
+        interval = setInterval(updateTimer, 1000);
+        btn.textContent = "Pause Routine";
+      } else {
+        clearInterval(interval);
+        btn.textContent = "Resume Routine";
+      }
+
+      routinePaused = !routinePaused;
+    }
+
+    function setRestPeriod() {
+      const val = parseInt(document.getElementById("restInput").value);
+      if (isNaN(val) || val < 0) {
+        restPeriod = 5;
+      } else {
+        restPeriod = val > 0 ? val + 1 : 0;
+      }
+    }
+
+    function toggleTopControls() {
+      const div = document.getElementById("topControls");
+      div.style.display = div.style.display === 'none' ? 'block' : 'none';
+    }
+
+    document.getElementById("speechSpeed").addEventListener("input", function () {
+      speechSpeed = parseFloat(this.value);
+      document.getElementById("speedValue").textContent = `${speechSpeed}x`;
+    });
+
+    loadTimerState();
+    displayWorkouts();
+  </script>
+</body>
+</html>
