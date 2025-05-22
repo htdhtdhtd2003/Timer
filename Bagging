@@ -1,0 +1,191 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Receipt & RX Barcode Scanner</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .matched { color: green; font-weight: bold; margin-left: 10px; }
+        .mismatch { color: red; font-weight: bold; margin-left: 10px; }
+        .match-count { width: 40px; font-weight: bold; color: blue; display: inline-block; }
+
+        /* Popup box styling */
+        #popup {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 15px 30px;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            border-radius: 8px;
+            z-index: 9999;
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body>
+    <h2>Patient Summary</h2>
+    <div id="summary">
+        Patient ID: <span id="patientId">--</span><br>
+        Total Receipts: <span id="totalReceipts">0</span><br>
+        Unique RX Numbers: <span id="uniqueRxCount">0</span>
+    </div>
+
+    <h2>Scan Receipts or RX Bottles</h2>
+    <input type="text" id="barcodeInput" placeholder="Scan receipt or RX barcode..." autofocus>
+    <p id="receiptError" class="mismatch"></p>
+
+    <h3>Receipts</h3>
+    <ul id="receiptList"></ul>
+
+    <h3>RX Bottles Scanned</h3>
+    <ul id="rxList"></ul>
+
+    <!-- Popup box -->
+    <div id="popup"></div>
+
+    <script>
+        let patientId = null;
+        const receiptMap = new Map();     // rx => [receipt barcodes]
+        const receiptDetails = new Map(); // full barcode => { rx, matchCount }
+        const fullReceiptSet = new Set();
+
+        const barcodeInput = document.getElementById("barcodeInput");
+        const receiptList = document.getElementById("receiptList");
+        const rxList = document.getElementById("rxList");
+        const receiptError = document.getElementById("receiptError");
+
+        const summary = {
+            patientId: document.getElementById("patientId"),
+            totalReceipts: document.getElementById("totalReceipts"),
+            uniqueRxCount: document.getElementById("uniqueRxCount")
+        };
+
+        function updateSummary() {
+            summary.patientId.textContent = patientId || "--";
+            summary.totalReceipts.textContent = fullReceiptSet.size;
+            summary.uniqueRxCount.textContent = receiptMap.size;
+        }
+
+        function updateReceiptDisplay(barcode) {
+            const detail = receiptDetails.get(barcode);
+            const el = document.getElementById(`receipt-${barcode}`);
+            if (!el) return;
+
+            const checks = '&#10004;'.repeat(detail.matchCount); // HTML checkmark
+
+            el.innerHTML = `
+                <span class="match-count">[${detail.matchCount}]</span>
+                ${barcode}
+                <span class="matched">${checks}</span>
+            `;
+        }
+
+        function clearAll() {
+            patientId = null;
+            receiptMap.clear();
+            receiptDetails.clear();
+            fullReceiptSet.clear();
+            receiptList.innerHTML = "";
+            rxList.innerHTML = "";
+            receiptError.textContent = "";
+            updateSummary();
+            barcodeInput.value = "";
+            barcodeInput.focus();
+        }
+
+        function showPopup(message, bgColor) {
+            const popup = document.getElementById("popup");
+            popup.textContent = message;
+            popup.style.backgroundColor = bgColor;
+            popup.style.display = "block";
+
+            setTimeout(() => {
+                popup.style.display = "none";
+            }, 1200);
+        }
+
+        barcodeInput.addEventListener("keypress", function(e) {
+            if (e.key === "Enter") {
+                const input = barcodeInput.value.trim();
+                barcodeInput.value = "";
+                receiptError.textContent = "";
+
+                if (/^\d{7}$/.test(input)) {
+                    // RX bottle scan
+                    const rxScan = input;
+                    const li = document.createElement("li");
+                    li.innerHTML = rxScan;
+
+                    if (receiptMap.has(rxScan)) {
+                        li.innerHTML += ' <span class="matched">&#10004;</span>';
+                        showPopup("MATCH", "green");
+
+                        // Update all matching receipts
+                        receiptMap.get(rxScan).forEach(barcode => {
+                            const detail = receiptDetails.get(barcode);
+                            detail.matchCount++;
+                            updateReceiptDisplay(barcode);
+                        });
+                    } else {
+                        li.innerHTML += ' <span class="mismatch">&#10060;</span>';
+                        receiptError.textContent = `RX ${rxScan} does not match any receipt.`;
+                        showPopup("MISMATCH", "red");
+                    }
+
+                    rxList.appendChild(li);
+                    barcodeInput.focus();
+                    return;
+                }
+
+                // Receipt scan
+                const match = input.match(/^(\d{5})-(\d{7})$/);
+                if (!match) {
+                    receiptError.textContent = "Invalid format. Use #####-####### or 7-digit RX.";
+                    barcodeInput.focus();
+                    return;
+                }
+
+                const [_, prefix, rx] = match;
+
+                if (!patientId) patientId = prefix;
+                if (prefix !== patientId) {
+                    receiptError.textContent = `Mismatch patient ID: expected ${patientId}, got ${prefix}`;
+                    barcodeInput.focus();
+                    return;
+                }
+
+                if (fullReceiptSet.has(input)) {
+                    receiptError.textContent = `Duplicate receipt: ${input}`;
+                    barcodeInput.focus();
+                    return;
+                }
+
+                fullReceiptSet.add(input);
+                if (!receiptMap.has(rx)) receiptMap.set(rx, []);
+                receiptMap.get(rx).push(input);
+                receiptDetails.set(input, { rx, matchCount: 0 });
+
+                const li = document.createElement("li");
+                li.id = `receipt-${input}`;
+                receiptList.appendChild(li);
+                updateReceiptDisplay(input);
+                updateSummary();
+
+                barcodeInput.focus();
+            }
+        });
+
+        // F10: Clear all and suppress default
+        document.addEventListener("keydown", function(e) {
+            if (e.key === "F10") {
+                e.preventDefault();
+                clearAll();
+            }
+        });
+    </script>
+</body>
+</html>
