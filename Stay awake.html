@@ -104,6 +104,7 @@
   <button onclick="resetWorkout()">Reset</button>
   <button id="pauseBtn" onclick="togglePause()">Pause Routine</button>
 <button onclick="stayAwake()">Stay Awake</button>
+<button onclick="releaseWakeLock()">Turn Off Stay Awake</button>
 
   <label>Rest between workouts (sec): <input type="number" id="restInput" min="0" value="5" onchange="setRestPeriod()"></label>
 
@@ -400,7 +401,7 @@ function startWorkout() {
   }
 
   currentWorkoutIndex = 0;
-stayAwake();
+
   startNextWorkout();
 
   document.getElementById("pauseBtn").disabled = false;
@@ -564,7 +565,22 @@ async function stayAwake() {
   }
 }
 
-    
+   async function releaseWakeLock() {
+  if (wakeLock) {
+    try {
+      await wakeLock.release();
+      wakeLock = null;
+      console.log("🟢 Wake Lock released.");
+      alert("Screen will now be allowed to sleep.");
+    } catch (err) {
+      console.error("Error releasing Wake Lock:", err);
+      alert("❌ Could not release Wake Lock: " + err.message);
+    }
+  } else {
+    alert("Wake Lock is not active.");
+  }
+}
+ 
   </script>
 </body>
 </html>
