@@ -565,6 +565,54 @@ function hideActionButtons() {
       },
     });
   });
+
+
+let wakeLock = null;
+let wakeLockActiveByUser = false;
+
+async function stayAwake() {
+  if ('wakeLock' in navigator) {
+    try {
+      wakeLock = await navigator.wakeLock.request('screen');
+      wakeLockActiveByUser = true;  // Mark as enabled by user
+      console.log("Wake Lock is active.");
+
+      wakeLock.addEventListener('release', () => {
+        console.log("Wake Lock was released.");
+        if (wakeLockActiveByUser) {
+          console.log("Trying to re-acquire...");
+          stayAwake();  // Re-acquire only if user still wants it on
+        }
+      });
+
+      alert("Screen will stay awake.");
+    } catch (err) {
+      console.error("Wake Lock failed:", err);
+      alert("Failed to enable stay awake mode.");
+    }
+  } else {
+    alert("Wake Lock API is not supported in this browser.");
+  }
+}
+
+async function releaseWakeLock() {
+  if (wakeLock) {
+    try {
+      wakeLockActiveByUser = false;  // Mark as disabled by user
+      await wakeLock.release();
+      wakeLock = null;
+      console.log("🟢 Wake Lock released.");
+      alert("Screen will now be allowed to sleep.");
+    } catch (err) {
+      console.error("Error releasing Wake Lock:", err);
+      alert("❌ Could not release Wake Lock: " + err.message);
+    }
+  } else {
+    alert("Wake Lock is not active.");
+  }
+}
+
+  
 </script>
 </body>
 </html>
