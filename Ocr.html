@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Camera OCR with Permission</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; }
+    video, canvas {
+      width: 100%;
+      max-width: 400px;
+      border: 1px solid #ccc;
+      margin-top: 10px;
+    }
+    #ocrResult {
+      margin-top: 15px;
+      white-space: pre-wrap;
+      font-family: monospace;
+    }
+    button {
+      margin-top: 10px;
+      padding: 10px 20px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+
+<h2>Live Camera OCR (with Permission)</h2>
+<video id="video" autoplay playsinline></video>
+<canvas id="canvas" style="display:none;"></canvas>
+<br>
+<button id="scanBtn">Scan Frame</button>
+<div id="ocrResult">OCR output will appear here.</div>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
+<script>
+  const video = document.getElementById('video');
+  const canvas = document.getElementById('canvas');
+  const scanBtn = document.getElementById('scanBtn');
+  const ocrResult = document.getElementById('ocrResult');
+
+  // Automatically ask for camera permission on load
+  async function startCamera() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment" },
+        audio: false
+      });
+      video.srcObject = stream;
+    } catch (error) {
+      console.error("Camera permission denied or error:", error);
+      ocrResult.textContent = "⚠️ Unable to access camera: " + error.message;
+    }
+  }
+
+  // Capture a frame and run OCR
+  scanBtn.addEventListener('click', () => {
+    const width = video.videoWidth;
+    const height = video.videoHeight;
+    if (width === 0 || height === 0) {
+      ocrResult.textContent = "⚠️ Video not ready. Please try again.";
+      return;
+    }
+
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, width, height);
+
+    const dataUrl = canvas.toDataURL();
+
+    ocrResult.textContent = "🔍 Scanning...";
+    Tesseract.recognize(dataUrl, 'eng', {
+      logger: m => console.log(m)
+    }).then(({ data: { text } }) => {
+      ocrResult.textContent = text.trim() || "(No text found)";
+    }).catch(err => {
+      ocrResult.textContent = "❌ OCR error: " + err.message;
+    });
+  });
+
+  // Start on load
+  window.addEventListener('load', startCamera);
+</script>
+
+</body>
+</html>
