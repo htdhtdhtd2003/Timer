@@ -1,46 +1,99 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Camera OCR with Permission</title>
+  <title>Camera OCR with Resizable Box</title>
   <style>
-    body { font-family: sans-serif; text-align: center; }
-    video, canvas {
+    body {
+      font-family: sans-serif;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+
+    #videoContainer {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      background: black;
+    }
+
+    video {
       width: 100%;
-      max-width: 400px;
-      border: 1px solid #ccc;
-      margin-top: 10px;
+      height: 100%;
+      object-fit: cover;
     }
-    #ocrResult {
-      margin-top: 15px;
-      white-space: pre-wrap;
-      font-family: monospace;
+
+    #overlay {
+      position: absolute;
+      top: 100px;
+      left: 50px;
+      width: 250px;
+      height: 150px;
+      border: 2px dashed red;
+      box-sizing: border-box;
+      cursor: move;
+      z-index: 10;
     }
-    button {
-      margin-top: 10px;
+
+    #resizeHandle {
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      background: red;
+      bottom: 0;
+      right: 0;
+      cursor: se-resize;
+    }
+
+    #scanBtn {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
       padding: 10px 20px;
       font-size: 16px;
+      z-index: 20;
+    }
+
+    #ocrResult {
+      position: absolute;
+      bottom: 70px;
+      left: 10px;
+      right: 10px;
+      background: rgba(0, 0, 0, 0.6);
+      color: white;
+      padding: 10px;
+      font-family: monospace;
+      font-size: 14px;
+      white-space: pre-wrap;
+      z-index: 20;
     }
   </style>
 </head>
 <body>
 
-<h2>Live Camera OCR (with Permission)</h2>
-<video id="video" autoplay playsinline></video>
-<canvas id="canvas" style="display:none;"></canvas>
-<br>
-<button id="scanBtn">Scan Frame</button>
-<div id="ocrResult">OCR output will appear here.</div>
+<div id="videoContainer">
+  <video id="video" autoplay playsinline></video>
+  <div id="overlay">
+    <div id="resizeHandle"></div>
+  </div>
+  <div id="ocrResult">OCR result will appear here</div>
+  <button id="scanBtn">Scan Box</button>
+</div>
 
-<!-- Scripts -->
+<!-- Libraries -->
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
+
 <script>
   const video = document.getElementById('video');
-  const canvas = document.getElementById('canvas');
+  const overlay = document.getElementById('overlay');
+  const resizeHandle = document.getElementById('resizeHandle');
   const scanBtn = document.getElementById('scanBtn');
   const ocrResult = document.getElementById('ocrResult');
 
-  // Automatically ask for camera permission on load
+  // Start camera
   async function startCamera() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -48,40 +101,89 @@
         audio: false
       });
       video.srcObject = stream;
-    } catch (error) {
-      console.error("Camera permission denied or error:", error);
-      ocrResult.textContent = "⚠️ Unable to access camera: " + error.message;
+    } catch (err) {
+      ocrResult.textContent = "Camera access failed: " + err.message;
     }
   }
 
-  // Capture a frame and run OCR
-  scanBtn.addEventListener('click', () => {
-    const width = video.videoWidth;
-    const height = video.videoHeight;
-    if (width === 0 || height === 0) {
-      ocrResult.textContent = "⚠️ Video not ready. Please try again.";
-      return;
-    }
+  // Drag logic
+  let isDragging = false, dragOffsetX = 0, dragOffsetY = 0;
+  overlay.addEventListener('mousedown', e => {
+    if (e.target === resizeHandle) return;
+    isDragging = true;
+    dragOffsetX = e.offsetX;
+    dragOffsetY = e.offsetY;
+  });
 
-    canvas.width = width;
-    canvas.height = height;
+  document.addEventListener('mousemove', e => {
+    if (isDragging) {
+      overlay.style.left = `${e.pageX - dragOffsetX}px`;
+      overlay.style.top = `${e.pageY - dragOffsetY}px`;
+    }
+  });
+
+  document.addEventListener('mouseup', () => {
+    isDragging = false;
+    isResizing = false;
+  });
+
+  // Resize logic
+  let isResizing = false, startWidth, startHeight, startX, startY;
+  resizeHandle.addEventListener('mousedown', e => {
+    isResizing = true;
+    startWidth = overlay.offsetWidth;
+    startHeight = overlay.offsetHeight;
+    startX = e.pageX;
+    startY = e.pageY;
+    e.stopPropagation(); // Prevent drag
+  });
+
+  document.addEventListener('mousemove', e => {
+    if (isResizing) {
+      const newWidth = startWidth + (e.pageX - startX);
+      const newHeight = startHeight + (e.pageY - startY);
+      overlay.style.width = `${Math.max(newWidth, 50)}px`;
+      overlay.style.height = `${Math.max(newHeight, 50)}px`;
+    }
+  });
+
+  // OCR logic
+  scanBtn.addEventListener('click', () => {
+    const rect = overlay.getBoundingClientRect();
+    const videoRect = video.getBoundingClientRect();
+    const scaleX = video.videoWidth / videoRect.width;
+    const scaleY = video.videoHeight / videoRect.height;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = rect.width * scaleX;
+    canvas.height = rect.height * scaleY;
+
     const ctx = canvas.getContext('2d');
-    ctx.drawImage(video, 0, 0, width, height);
+    ctx.drawImage(
+      video,
+      (rect.left - videoRect.left) * scaleX,
+      (rect.top - videoRect.top) * scaleY,
+      rect.width * scaleX,
+      rect.height * scaleY,
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    );
 
     const dataUrl = canvas.toDataURL();
-
     ocrResult.textContent = "🔍 Scanning...";
+
     Tesseract.recognize(dataUrl, 'eng', {
       logger: m => console.log(m)
     }).then(({ data: { text } }) => {
       ocrResult.textContent = text.trim() || "(No text found)";
     }).catch(err => {
-      ocrResult.textContent = "❌ OCR error: " + err.message;
+      ocrResult.textContent = "OCR error: " + err.message;
     });
   });
 
-  // Start on load
-  window.addEventListener('load', startCamera);
+  startCamera();
 </script>
 
 </body>
