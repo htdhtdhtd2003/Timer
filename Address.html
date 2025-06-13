@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Multi-Distance Calculator</title>
+</head>
+<body>
+  <h2>Distance Calculator</h2>
+
+  <label>Pharmacy Address:</label><br>
+  <input type="text" id="start" value=""><br><br>
+
+  <label>Patient Address:</label><br>
+  <input type="text" id="end1" value=""><br><br>
+
+  <label>Doctor Address:</label><br>
+  <input type="text" id="end2" value=""><br><br>
+
+  <button onclick="getDistances()">Calculate Distances</button>
+  <br>
+  
+  <button onclick="copyToClipboard()">Copy to Clipboard</button>
+ <br>
+  <button onclick="clearEndAddresses()">Clear End Addresses</button>
+
+  <p id="output"></p>
+
+  <script>
+    let lastStart = '';
+    let lastEnd1 = '';
+    let lastEnd2 = '';
+    let lastDistance1 = '';
+    let lastDistance2 = '';
+
+    async function getCoordinates(address) {
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`);
+      const data = await res.json();
+      if (data.length === 0) return null;
+      return [data[0].lon, data[0].lat];
+    }
+
+    async function getDistanceMiles(startCoords, endCoords) {
+      const orsApiKey = '5b3ce3597851110001cf6248da310d22a4e741928f54a48404f08e0f';
+      const response = await fetch("https://api.openrouteservice.org/v2/directions/driving-car/json", {
+        method: "POST",
+        headers: {
+          "Authorization": orsApiKey,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          coordinates: [startCoords, endCoords]
+        })
+      });
+      const data = await response.json();
+      if (!data.routes || !data.routes[0]) return null;
+      return (data.routes[0].summary.distance / 1609.34).toFixed(2); // Convert meters to miles
+    }
+
+    async function getDistances() {
+      const start = document.getElementById('start').value.trim();
+      const end1 = document.getElementById('end1').value.trim();
+      const end2 = document.getElementById('end2').value.trim();
+
+      document.getElementById("output").innerText = "Calculating...";
+
+      const [startCoords, end1Coords, end2Coords] = await Promise.all([
+        getCoordinates(start),
+        getCoordinates(end1),
+        getCoordinates(end2)
+      ]);
+
+      if (!startCoords || !end1Coords || !end2Coords) {
+        document.getElementById("output").innerText = "Failed to geocode one or more addresses.";
+        return;
+      }
+
+      const [distance1, distance2] = await Promise.all([
+        getDistanceMiles(startCoords, end1Coords),
+        getDistanceMiles(startCoords, end2Coords)
+      ]);
+
+      if (!distance1 || !distance2) {
+        document.getElementById("output").innerText = "Could not calculate one or both distances.";
+        return;
+      }
+
+      // Display result with proper labels
+      document.getElementById("output").innerHTML =
+        `<strong>Pharmacy Address:</strong> ${start}<br>
+         <strong>Patient Address:</strong> ${end1} = ${distance1} miles<br>
+         <strong>Doctor Address:</strong> ${end2} = ${distance2} miles`;
+
+      // Save for clipboard
+      lastStart = start;
+      lastEnd1 = end1;
+      lastEnd2 = end2;
+      lastDistance1 = distance1;
+      lastDistance2 = distance2;
+    }
+
+    function copyToClipboard() {
+      if (!lastStart || !lastEnd1 || !lastEnd2 || !lastDistance1 || !lastDistance2) {
+        alert("Please calculate distances first.");
+        return;
+      }
+
+      const text = `Pharmacy Address: ${lastStart}
+Patient Address: ${lastEnd1} (Distance: ${lastDistance1} miles)
+Doctor Address: ${lastEnd2} (Distance: ${lastDistance2} miles)`;
+
+      navigator.clipboard.writeText(text).then(() => {
+        alert("Copied to clipboard!");
+      }).catch(err => {
+        alert("Failed to copy: " + err);
+      });
+    }
+
+    function clearEndAddresses() {
+      document.getElementById('end1').value = '';
+      document.getElementById('end2').value = '';
+      document.getElementById('output').innerText = '';
+      // Clear saved distances
+      lastEnd1 = '';
+      lastEnd2 = '';
+      lastDistance1 = '';
+      lastDistance2 = '';
+    }
+  </script>
+</body>
+</html>
