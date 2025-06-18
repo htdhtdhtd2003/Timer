@@ -1,0 +1,308 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Texas Pharmacy Searchable List</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+  }
+  input[type="text"] {
+    margin-bottom: 12px;
+    padding: 8px;
+    width: 100%;
+    box-sizing: border-box;
+    font-size: 16px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 8px;
+  }
+  th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+  }
+  th {
+    background-color: #007bff;
+    color: white;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+  tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+  tr:hover {
+    background-color: #e9f5ff;
+  }
+</style>
+</head>
+<body>
+
+<h2>Texas Pharmacy Search Results</h2>
+
+<input type="text" id="searchInput" placeholder="Search pharmacies...">
+<button id="copyBtn">Copy Results to Clipboard</button>
+
+<table id="pharmacyTable">
+  <thead>
+    <tr>
+      <th>Pharmacy Name</th>
+      <th>Address</th>
+      <th>City</th>
+      <th>State</th>
+    </tr>
+  </thead>
+  <tbody>
+<tr><td>KROGER COLUMBUS CENTRAL FILL</td><td>2270 RICKENBACKER PKWY W.</td><td>COLUMBUS</td><td>OH</td></tr>
+<tr><td>KROGER HEALTH CONNECT</td><td>11300 CORNELL PARK DR 5TH FLR</td><td>BLUE ASH</td><td>OH</td></tr>
+<tr><td>KROGER HEALTH CONNECT UA</td><td>921 CHATHAM LN STE 100</td><td>COLUMBUS</td><td>OH</td></tr>
+<tr><td>KROGER HEALTH CONNECT UC</td><td>3255 EDEN AVE SUITE G10</td><td>CINCINNATI</td><td>OH</td></tr>
+<tr><td>KROGER PHARMACY # 017</td><td>1440 STUDEMONT ST</td><td>HOUSTON</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY # 038</td><td>25050 FM 1093</td><td>RICHMOND</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY # 117</td><td>24350 KUYKENDAHL RD.</td><td>TOMBALL</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY # 509</td><td>4901 MAPLE AVE</td><td>DALLAS</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY # 529</td><td>4241 CAPITOL AVE</td><td>DALLAS</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY # 562</td><td>12600 N BEACH ST</td><td>FORT WORTH</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY # 578</td><td>2608 W FM 544</td><td>WYLIE</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY # 579</td><td>500 MARKETPLACE BLVD.</td><td>FORNEY</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #009</td><td>10250 STATE HWY 6</td><td>MISSOURI CITY</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #010</td><td>24401 BRAZOS TOWN CROSSING</td><td>ROSENBERG</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #014</td><td>12605 INTERSTATE 45 NORTH</td><td>WILLIS</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #108</td><td>3541 PALMER HWY</td><td>TEXAS CITY</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #115</td><td>9703 BARKER CYPRESS RD</td><td>CYPRESS</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #121</td><td>9806 GASTON RD</td><td>KATY</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #122</td><td>2700 W. GRAND PKWY N</td><td>KATY</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #128</td><td>14221 E SAM HOUSTON PKWY N</td><td>HOUSTON</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #130</td><td>2150 SPRING STUEBNER</td><td>SPRING</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #131</td><td>18861 UNIVERSITY BLVD</td><td>SUGAR LAND</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #136</td><td>341 S LOOP 336 W</td><td>CONROE</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #137</td><td>3731 RILEY FUZZEL RD</td><td>SPRING</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #138</td><td>22030 MARKET PLACE DR</td><td>NEW CANEY</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #142</td><td>20168 EVA ST</td><td>MONTGOMERY</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #144</td><td>1920 W LEAGUE CITY PKWY</td><td>LEAGUE CITY</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #145</td><td>223 IH 45 S</td><td>HUNTSVILLE</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #146</td><td>1712 SPRING GREEN BLVD</td><td>KATY</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #149</td><td>800 NORTH DIXIE DR</td><td>CLUTE</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #150</td><td>6315 GARTH RD</td><td>BAYTOWN</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #156</td><td>6322 TELEPHONE ROAD</td><td>HOUSTON</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #161</td><td>14344 MEMORIAL DR.</td><td>HOUSTON</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #179</td><td>20355 CYPRESSWOOD DR</td><td>CYPRESS</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #190</td><td>9475 FM 1960 BYPASS W</td><td>HUMBLE</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #191</td><td>313 E PIONEER PKWY</td><td>GRAND PRAIRIE</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #209</td><td>525 N GALLOWAY</td><td>MESQUITE</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #213</td><td>752 WYNNEWOOD VILLAGE S/C</td><td>DALLAS</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #224</td><td>3510 ALTA MESA</td><td>FORT WORTH</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #256</td><td>1804 N VELASCO</td><td>ANGLETON</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #264</td><td>3245 EAST BROADWAY</td><td>PEARLAND</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #275</td><td>13133 VETERANS MEMORIAL</td><td>HOUSTON</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #300</td><td>1950 EL DORADO</td><td>HOUSTON</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #302</td><td>5730 SEAWALL BLVD</td><td>GALVESTON</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #307</td><td>15802 CHAMPION FOREST DRIVE</td><td>SPRING</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #308</td><td>11003 SHADOW CREEK PARKWAY</td><td>PEARLAND</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #309</td><td>1801 S VOSS</td><td>HOUSTON</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #310</td><td>3410 NORTH PARK DRIVE</td><td>KINGWOOD</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #311</td><td>9330 JONES RD.</td><td>HOUSTON</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #312</td><td>1035 N SHEPHERD DRIVE</td><td>HOUSTON</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #313</td><td>10719 FM 1960 RD W</td><td>HOUSTON</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #314</td><td>9835 MEMORIAL DR</td><td>HOUSTON</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #315</td><td>9602 KATY FWY</td><td>HOUSTON</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #317</td><td>12555 MEMORIAL DRIVE</td><td>HOUSTON</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #318</td><td>3220 SILVER WING DR</td><td>HOUSTON</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #319</td><td>5655 BEECHNUT</td><td>HOUSTON</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #320</td><td>11650 FM 1960 W</td><td>HOUSTON</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #321</td><td>2300 E. LITTLE YORK RD</td><td>HOUSTON</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #322</td><td>9125 LONG POINT</td><td>HOUSTON</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #323</td><td>5903 W. SAM HOUSTON PKWY N</td><td>HOUSTON</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #324</td><td>11111 SHERWOOD FOREST</td><td>HOUSTON</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #325</td><td>12314 WESTHEIMER RD</td><td>HOUSTON</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #326</td><td>11633 BEECHNUT ST</td><td>HOUSTON</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #327</td><td>6900 W LOOP S</td><td>HOUSTON</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #328</td><td>10600 MEMORIAL DR</td><td>HOUSTON</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #329</td><td>5550 GESSNER RD</td><td>HOUSTON</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #330</td><td>3801 WILLOWRIDGE</td><td>HOUSTON</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #331</td><td>13711 WESTHEIMER</td><td>HOUSTON</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #332</td><td>1300 N LOOP W</td><td>HOUSTON</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #333</td><td>2626 NORTH LOOP W</td><td>HOUSTON</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #334</td><td>4301 S. MAIN</td><td>HOUSTON</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #335</td><td>3009 FM 1960 E</td><td>HOUSTON</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #336</td><td>13825 BRIDGELAND DR</td><td>HOUSTON</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #337</td><td>6602 FULTON ST</td><td>HOUSTON</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #338</td><td>14650 FM 529</td><td>HOUSTON</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #339</td><td>10490 HAMMERLY BLVD</td><td>HOUSTON</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #340</td><td>12828 KIRKWOOD RD</td><td>HOUSTON</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #341</td><td>10675 HIGHWAY 6</td><td>HOUSTON</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #342</td><td>11680 S. SAM HOUSTON PKWY</td><td>HOUSTON</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #343</td><td>11733 FM 529</td><td>HOUSTON</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #344</td><td>10010 WOODFOREST BLVD</td><td>HOUSTON</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #345</td><td>11622 VINTAGE PARK BLVD</td><td>HOUSTON</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #346</td><td>12500 NORTHWEST FWY</td><td>HOUSTON</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #347</td><td>6420 BEECHNUT ST</td><td>HOUSTON</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #348</td><td>6200 S. GESSNER</td><td>HOUSTON</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #349</td><td>12121 KATY FWY</td><td>HOUSTON</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #350</td><td>13130 S. POST OAK</td><td>HOUSTON</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #351</td><td>2420 HILLENDAL DR</td><td>HOUSTON</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #352</td><td>4000 ALDINE MAIL RT</td><td>HOUSTON</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #353</td><td>2920 MEMORIAL DR</td><td>HOUSTON</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #354</td><td>18400 KATY FWY</td><td>HOUSTON</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #355</td><td>14060 MEMORIAL DR</td><td>HOUSTON</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #356</td><td>5231 SOUTHWEST FWY</td><td>HOUSTON</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #357</td><td>12050 FOUNTAIN LAKE DR</td><td>HOUSTON</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #358</td><td>11529 FONDREN RD</td><td>HOUSTON</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #359</td><td>19210 MEMORIAL DR</td><td>HOUSTON</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #360</td><td>8300 WESTHEIMER RD</td><td>HOUSTON</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #361</td><td>1806 FM 1960 W</td><td>HOUSTON</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #362</td><td>10255 FOUNTAIN LAKE DR</td><td>HOUSTON</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #363</td><td>8508 LONG POINT RD</td><td>HOUSTON</td><td>TX</td></tr>
+<tr><td>KROGER PHARMACY #364</td><td>6302 RICHMOND AVE</td><td>HOUSTON</td>
+
+ <tr><td>KROGER PHARMACY #403</td><td>532 W I-30</td><td>Garland</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #413</td><td>2580 E Arkansas</td><td>Arlington</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #415</td><td>1617 W Henderson</td><td>Cleburne</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #429</td><td>2201 W Grauwyler</td><td>Irving</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #431</td><td>325 East Spring</td><td>Palestine</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #435</td><td>2475 Ascension Blvd</td><td>Arlington</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #436</td><td>235 E FM #1382</td><td>Cedar Hill</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #439</td><td>9114 Camp Bowie West Blvd.</td><td>Fort Worth</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #445</td><td>5330 S Cooper</td><td>Arlington</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #448</td><td>950 E Sandy Lake Road</td><td>Coppell</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #450</td><td>3600 Gus Thomasson Road</td><td>Mesquite</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #451</td><td>1060 N Main</td><td>Euless</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #456</td><td>2709 Cross Timbers Rd</td><td>Flower Mound</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #460</td><td>4038 Old Denton Road</td><td>Carrollton</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #461</td><td>5190 Hwy 78</td><td>Sachse</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #488</td><td>1707 W University</td><td>McKinney</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #490</td><td>2415 Highway 79 S</td><td>Henderson</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #492</td><td>11925 Elam Road</td><td>Balch Springs</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #493</td><td>500 W University</td><td>Denton</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #495</td><td>515 S MacArthur</td><td>Irving</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #511</td><td>10677 E Northwest Highway</td><td>Dallas</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #512</td><td>2110 E Southlake Blvd.</td><td>Southlake</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #516</td><td>976 Keller Parkway</td><td>Keller</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #517</td><td>160 N Coit</td><td>Richardson</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #518</td><td>5665 E Mockingbird</td><td>Dallas</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #520</td><td>3120 South University</td><td>Fort Worth</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #521</td><td>2109 Harwood Road</td><td>Bedford</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #522</td><td>7100 Independence Parkway</td><td>Plano</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #526</td><td>536 Centennial Blvd.</td><td>Buckingham</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #527</td><td>200 W Camp Wisdom Rd</td><td>Duncanville</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #528</td><td>4142 Cedar Springs</td><td>Dallas</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #530</td><td>1653 Basswood Blvd</td><td>Fort Worth</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #532</td><td>5241 N. Tarrant Pkwy</td><td>Fort Worth</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #535</td><td>9150 N Tarrant Pkwy</td><td>North Richland Hills</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #536</td><td>6650 N Beach</td><td>Fort Worth</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #537</td><td>2061 Rufe Snow</td><td>Keller</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #538</td><td>2350 S.E. Green Oaks Blvd.</td><td>Arlington</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #540</td><td>3305 N Dallas Parkway</td><td>Plano</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #542</td><td>3300 Texas Sage Trail</td><td>Fort Worth</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #543</td><td>945 W Lamar Blvd.</td><td>Arlington</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #544</td><td>1212 E Bethany Drive</td><td>Allen</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #545</td><td>1001 N Interstate 35 E Ste 500</td><td>Desoto</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #546</td><td>4851 Legacy Drive</td><td>Frisco</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #547</td><td>3205 Main Street</td><td>Frisco</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #548</td><td>1210 N. Greenville Ave.</td><td>Allen</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #557</td><td>6850 N Shiloh Road</td><td>Garland</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #559</td><td>1406 West Walnut</td><td>Garland</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #560</td><td>7500 Preston</td><td>Frisco</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #561</td><td>12221 Custer Road</td><td>Frisco</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #563</td><td>4017 14th Street</td><td>Plano</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #567</td><td>2901 Lake Forest Drive</td><td>McKinney</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #568</td><td>1320 W McDermott Dr.</td><td>Allen</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #570</td><td>5021 Teasley Ln</td><td>Denton</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #572</td><td>3400 FM 407 E</td><td>Bartonville</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #573</td><td>1250 N Preston Rd</td><td>Prosper</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #574</td><td>1950 N Goliad St</td><td>Rockwall</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #575</td><td>2935 Ridge Road</td><td>Rockwall</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #576</td><td>4750 W Bailey Boswell Rd</td><td>Fort Worth</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #577</td><td>7505 N MacArthur Blvd.</td><td>Irving</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #580</td><td>2671 Little Elm Parkway</td><td>Little Elm</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #581</td><td>2925 Custer Rd.</td><td>Plano</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #582</td><td>9135 Boulevard 26</td><td>North Richland Hills</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #584</td><td>3001 Matlock Road</td><td>Mansfield</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #585</td><td>1101 Flower Mound Road</td><td>Flower Mound</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #586</td><td>1592 S Loop 288</td><td>Denton</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #587</td><td>3939 Frankford Road</td><td>Dallas</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #588</td><td>9140 Forest Lane</td><td>Dallas</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #589</td><td>4650 W University</td><td>Prosper</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #590</td><td>1004 S Crowley Road</td><td>Crowley</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #591</td><td>1631 SW Wilshire Blvd</td><td>Burleson</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #592</td><td>5101 W Sublett Rd</td><td>Arlington</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #594</td><td>3300 E Broad Street</td><td>Mansfield</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #596</td><td>2200 FM 663</td><td>Midlothian</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #599</td><td>4620 SH 121</td><td>Lewisville</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #607</td><td>2300 N Gessner</td><td>Houston</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #688</td><td>301 S Bowen</td><td>Arlington</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #689</td><td>17194 Preston Road</td><td>Dallas</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #695</td><td>5701 West Pleasant Ridge Road</td><td>Fort Worth</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #704</td><td>4300 Meacham Blvd.</td><td>Fort Worth</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #721</td><td>7075 Lake Worth Blvd.</td><td>Lake Worth</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #743</td><td>14625 Midway Road</td><td>Addison</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #767</td><td>2929 W Park Row Drive</td><td>Pantego</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #768</td><td>2300 W Berry Street</td><td>Fort Worth</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #777</td><td>2021 East Central</td><td>Bedford</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #778</td><td>1030 E. Pipeline Road</td><td>Hurst</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #779</td><td>5905 Edgemere Blvd.</td><td>Fort Worth</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #780</td><td>1609 Airport Freeway</td><td>Bedford</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #784</td><td>600 N Lakeview Pkwy</td><td>Rowlett</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #785</td><td>4300 E. Pioneer Parkway</td><td>Arlington</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #786</td><td>2000 E. 6th Street</td><td>Arlington</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #788</td><td>1316 W. Southlake Blvd</td><td>Southlake</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #789</td><td>1300 NE Green Oaks Blvd.</td><td>Arlington</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #790</td><td>3801 W Fwy</td><td>Fort Worth</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #792</td><td>2318 E. Southlake Blvd.</td><td>Southlake</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #794</td><td>1501 Summit Avenue</td><td>Plano</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #795</td><td>1300 McDermott Drive</td><td>Allen</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #796</td><td>3850 N Josey Lane</td><td>Carrollton</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #797</td><td>1600 Airport Freeway</td><td>Bedford</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #798</td><td>7801 Camp Bowie Blvd</td><td>Fort Worth</td><td>TX</td></tr>
+    <tr><td>KROGER PHARMACY #799</td><td>2212 Interstate 35 N</td><td>Fort Worth</td><td>TX</td></tr>
+  </tbody>
+</table>
+
+<script>
+  const searchInput = document.getElementById('searchInput');
+  const tbody = document.getElementById('pharmacyTable').tBodies[0];
+
+  searchInput.addEventListener('input', () => {
+    const filter = searchInput.value.toLowerCase();
+    for (let row of tbody.rows) {
+      const text = row.textContent.toLowerCase();
+      row.style.display = text.includes(filter) ? '' : 'none';
+    }
+  });
+
+
+document.getElementById("copyBtn").addEventListener("click", function () {
+  const rows = document.querySelectorAll("#pharmacyTable tbody tr");
+  let output = "";
+
+  rows.forEach(row => {
+    const cells = row.querySelectorAll("td");
+    const state = cells[3]?.textContent.trim();
+    if (state === "TX") {
+      const address = cells[1]?.textContent.trim();
+      const city = cells[2]?.textContent.trim();
+      output += `${address}, ${city}, ${state}\n`;
+    }
+  });
+
+  navigator.clipboard.writeText(output).then(() => {
+    alert("Texas pharmacy addresses copied to clipboard!");
+  }).catch(err => {
+    alert("Failed to copy: " + err);
+  });
+});
+
+
+
+
+</script>
+
+</body>
+</html>
