@@ -1,5 +1,6 @@
 
 
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -264,45 +265,48 @@
     <tr><td>KROGER PHARMACY #799</td><td>2212 Interstate 35 N</td><td>Fort Worth</td><td>TX</td></tr>
   </tbody>
 </table>
-
 <script>
-  const searchInput = document.getElementById('searchInput');
-  const tbody = document.getElementById('pharmacyTable').tBodies[0];
+  const searchInput = document.getElementById("searchInput");
+  const table = document.getElementById("pharmacyTable");
+  const copyBtn = document.getElementById("copyBtn");
 
-  searchInput.addEventListener('input', () => {
+  searchInput.addEventListener("keyup", function () {
     const filter = searchInput.value.toLowerCase();
-    for (let row of tbody.rows) {
-      const text = row.textContent.toLowerCase();
-      row.style.display = text.includes(filter) ? '' : 'none';
+    const rows = table.getElementsByTagName("tr");
+
+    for (let i = 1; i < rows.length; i++) {
+      const row = rows[i];
+      const cells = row.getElementsByTagName("td");
+      let match = false;
+      for (let j = 0; j < cells.length; j++) {
+        if (cells[j] && cells[j].textContent.toLowerCase().indexOf(filter) > -1) {
+          match = true;
+          break;
+        }
+      }
+      row.style.display = match ? "" : "none";
     }
   });
 
+  copyBtn.addEventListener("click", function () {
+    let textToCopy = "";
+    const rows = table.querySelectorAll("tbody tr");
+    rows.forEach(row => {
+      if (row.style.display !== "none") {
+        const cols = row.querySelectorAll("td");
+        let rowText = Array.from(cols).map(col => col.textContent.trim()).join("\t");
+        textToCopy += rowText + "\n";
+      }
+    });
 
-document.getElementById("copyBtn").addEventListener("click", function () {
-  const rows = document.querySelectorAll("#pharmacyTable tbody tr");
-  let output = "";
-
-  rows.forEach(row => {
-    const cells = row.querySelectorAll("td");
-    const state = cells[3]?.textContent.trim();
-    if (state === "TX") {
-      const address = cells[1]?.textContent.trim();
-      const city = cells[2]?.textContent.trim();
-      output += `${address}, ${city}, ${state}\n`;
-    }
+    navigator.clipboard.writeText(textToCopy).then(() => {
+      alert("Visible results copied to clipboard!");
+    }).catch(err => {
+      alert("Failed to copy: " + err);
+    });
   });
-
-  navigator.clipboard.writeText(output).then(() => {
-    alert("Texas pharmacy addresses copied to clipboard!");
-  }).catch(err => {
-    alert("Failed to copy: " + err);
-  });
-});
-
-
-
-
 </script>
+
 
 </body>
 </html>
