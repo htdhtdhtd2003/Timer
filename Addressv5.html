@@ -228,10 +228,10 @@ Patient to Doctor: ${distance3} miles`;
         return;
       }
 
-      const text = `Pharmacy Address: ${lastStart}
-Patient Address: ${lastEnd1} (Distance from Pharmacy: ${lastDistance1} miles)
-Doctor Address: ${lastEnd2} (Distance from Pharmacy: ${lastDistance2} miles)
-Patient to Doctor Distance: ${lastDistance3} miles`;
+      const text = `**1**Pharmacy Address: ${lastStart}
+**2**Patient Address: ${lastEnd1} (Distance from Pharmacy: ${lastDistance1} miles)
+**3**Doctor Address: ${lastEnd2} (Distance from Pharmacy: ${lastDistance2} miles)
+**4**Patient to Doctor Distance: ${lastDistance3} miles`;
 
       navigator.clipboard.writeText(text).then(() => {
         alert("Copied to clipboard!");
