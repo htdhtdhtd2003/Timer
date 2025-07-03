@@ -12,76 +12,40 @@
     body {
       margin: 0;
       font-family: Arial, sans-serif;
-      padding: 0;
       background: #f0f0f0;
-    }
-
-    #qrcode-container {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 50vh;
-      display: none;
-      background: white;
-      z-index: 1000;
       display: flex;
-      justify-content: center;
-      align-items: center;
-      border-bottom: 2px solid #ccc;
-    }
-
-    #qrcode {
-      display: inline-block;
-    }
-
-    #rdac-input {
-      width: 100%;
-      font-size: 1.5rem;
-      padding: 12px;
-      margin-top: 52vh;
-    }
-
-    .button-container {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      display: flex;
-      justify-content: space-between;
-      background: #fff;
-      border-top: 1px solid #ccc;
-      z-index: 1000;
-    }
-
-    .large-button {
-      flex: 1;
-      padding: 30px 0;
-      font-size: 1.3rem;
-      background-color: #007bff;
-      color: white;
-      border: none;
-      touch-action: manipulation;
-    }
-
-    .large-button:first-child {
-      border-right: 1px solid #ccc;
+      flex-direction: column;
+      height: 100vh;
     }
 
     #scanner {
-      display: none;
       width: 100%;
       max-width: 400px;
-      margin: 10px auto;
+      height: 40vh; /* Top 40% of viewport height */
+      margin: 0 auto;
+      margin-top: 10px;
+      display: none;
       z-index: 999;
     }
 
-    #scan-btn, #toggle-camera-btn {
+    #buttons-container {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 15px;
+      padding: 20px;
       width: 100%;
-      font-size: 1.2rem;
-      padding: 15px;
+    }
+
+    button {
+      width: 100%;
+      height: 60px;
+      font-size: 1.5rem;
       border: none;
-      margin-bottom: 10px;
+      border-radius: 8px;
+      cursor: pointer;
     }
 
     #scan-btn {
@@ -93,35 +57,48 @@
       background-color: #ffc107;
       color: black;
     }
+
+    #rdac-input {
+      width: 90%;
+      font-size: 1.2rem;
+      padding: 10px;
+      margin: 10px auto;
+      display: block;
+    }
+
+    /* QR code container for the generated code */
+    #qrcode-container {
+      position: fixed;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: white;
+      padding: 10px;
+      border: 1px solid #ccc;
+      display: none;
+      z-index: 1000;
+    }
+
   </style>
 </head>
 <body>
 
-  <!-- QR Code Display -->
-  <div id="qrcode-container">
-    <div id="qrcode"></div>
-  </div>
+  <div id="qrcode-container"><div id="qrcode"></div></div>
 
-  <!-- Buttons -->
-  <button id="scan-btn">📷 Scan Barcode</button>
-  <button id="toggle-camera-btn">🔄 Switch Camera</button>
-
-  <!-- Camera Preview -->
+  <!-- Scanner preview top center -->
   <div id="scanner"></div>
 
-  <!-- Input Field -->
+  <!-- Input field -->
   <input id="rdac-input" type="text" placeholder="Scan RDAC barcode..." autocomplete="off" />
 
-  <!-- Bottom Buttons -->
-  <div class="button-container">
-    <button id="left-btn" class="large-button">Left</button>
-    <button id="right-btn" class="large-button">Right</button>
+  <!-- Buttons container at bottom half -->
+  <div id="buttons-container">
+    <button id="scan-btn">📷 Scan Barcode</button>
+    <button id="toggle-camera-btn">🔄 Switch Camera</button>
   </div>
 
   <script>
     let rdacCode = '';
-    let leftHeld = false;
-    let rightHeld = false;
     let scannerStarted = false;
     let html5Qrcode;
     let currentCameraId = null;
@@ -135,7 +112,6 @@
     const toggleBtn = document.getElementById('toggle-camera-btn');
     const scannerDiv = document.getElementById('scanner');
 
-    // Input handler
     rdacInput.addEventListener('input', (e) => {
       let value = e.target.value.replace(/^F12/i, '');
       if (value.length > 30) value = value.slice(0, 30);
@@ -158,32 +134,13 @@
         colorLight: "#ffffff",
         correctLevel: QRCode.CorrectLevel.H
       });
-      qrcodeContainer.style.display = 'flex';
+      qrcodeContainer.style.display = 'block';
     }
 
     function hideQRCode() {
       qrcodeContainer.style.display = 'none';
       qrcodeDiv.innerHTML = '';
     }
-
-    function bindHold(button, onDown, onUp) {
-      button.addEventListener('touchstart', onDown);
-      button.addEventListener('touchend', onUp);
-      button.addEventListener('mousedown', onDown);
-      button.addEventListener('mouseup', onUp);
-    }
-
-    bindHold(document.getElementById('left-btn'), () => leftHeld = true, () => leftHeld = false);
-
-    bindHold(document.getElementById('right-btn'),
-      () => {
-        rightHeld = true;
-        if (leftHeld) showQRCode();
-      },
-      () => {
-        rightHeld = false;
-        hideQRCode();
-      });
 
     function startScanner() {
       if (scannerStarted) return;
@@ -210,10 +167,10 @@
           (decodedText) => {
             rdacInput.value = decodedText;
             rdacInput.dispatchEvent(new Event('input'));
-            hideAllAfterScan(); // <- Automatically hide scanner
+            hideAllAfterScan();
           },
           (errorMessage) => {
-            // Optionally handle scanning errors
+            // Optional error handling
           }
         );
       }).catch(err => {
@@ -248,10 +205,8 @@
       rdacInput.style.display = 'none';
     }
 
-    // Button actions
     scanBtn.addEventListener('click', startScanner);
     toggleBtn.addEventListener('click', toggleCamera);
   </script>
-
 </body>
 </html>
