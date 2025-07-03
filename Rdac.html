@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -79,14 +80,18 @@
       width: 100%;
       font-size: 1.2rem;
       padding: 15px;
-      background-color: #28a745;
-      color: white;
       border: none;
       margin-bottom: 10px;
     }
 
+    #scan-btn {
+      background-color: #28a745;
+      color: white;
+    }
+
     #toggle-camera-btn {
       background-color: #ffc107;
+      color: black;
     }
   </style>
 </head>
@@ -97,14 +102,14 @@
     <div id="qrcode"></div>
   </div>
 
-  <!-- Scan and Toggle Camera Buttons -->
+  <!-- Buttons -->
   <button id="scan-btn">📷 Scan Barcode</button>
   <button id="toggle-camera-btn">🔄 Switch Camera</button>
 
-  <!-- Scanner Area -->
+  <!-- Camera Preview -->
   <div id="scanner"></div>
 
-  <!-- RDAC Input -->
+  <!-- Input Field -->
   <input id="rdac-input" type="text" placeholder="Scan RDAC barcode..." autocomplete="off" />
 
   <!-- Bottom Buttons -->
@@ -130,8 +135,7 @@
     const toggleBtn = document.getElementById('toggle-camera-btn');
     const scannerDiv = document.getElementById('scanner');
 
-    let qr;
-
+    // Input handler
     rdacInput.addEventListener('input', (e) => {
       let value = e.target.value.replace(/^F12/i, '');
       if (value.length > 30) value = value.slice(0, 30);
@@ -139,17 +143,14 @@
       rdacCode = value;
 
       if (value.length === 30) {
-        e.target.style.display = 'none';
-        scanBtn.style.display = 'none';
-        toggleBtn.style.display = 'none';
-        stopScanner();
+        hideAllAfterScan();
       }
     });
 
     function showQRCode() {
       if (!rdacCode) return;
       qrcodeDiv.innerHTML = '';
-      qr = new QRCode(qrcodeDiv, {
+      new QRCode(qrcodeDiv, {
         text: rdacCode,
         width: 150,
         height: 150,
@@ -173,6 +174,7 @@
     }
 
     bindHold(document.getElementById('left-btn'), () => leftHeld = true, () => leftHeld = false);
+
     bindHold(document.getElementById('right-btn'),
       () => {
         rightHeld = true;
@@ -208,9 +210,10 @@
           (decodedText) => {
             rdacInput.value = decodedText;
             rdacInput.dispatchEvent(new Event('input'));
+            hideAllAfterScan(); // <- Automatically hide scanner
           },
           (errorMessage) => {
-            // handle scan error
+            // Optionally handle scanning errors
           }
         );
       }).catch(err => {
@@ -237,10 +240,18 @@
       setTimeout(() => startScanner(), 500);
     }
 
+    function hideAllAfterScan() {
+      stopScanner();
+      scannerDiv.style.display = 'none';
+      scanBtn.style.display = 'none';
+      toggleBtn.style.display = 'none';
+      rdacInput.style.display = 'none';
+    }
+
+    // Button actions
     scanBtn.addEventListener('click', startScanner);
     toggleBtn.addEventListener('click', toggleCamera);
   </script>
 
 </body>
 </html>
-
