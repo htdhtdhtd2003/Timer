@@ -7,9 +7,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://unpkg.com/html5-qrcode"></script>
   <style>
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
@@ -70,7 +68,6 @@
       border-right: 1px solid #ccc;
     }
 
-    /* Scanner UI */
     #scanner {
       display: none;
       width: 100%;
@@ -91,21 +88,21 @@
 </head>
 <body>
 
-  <!-- QR Code Display Section -->
+  <!-- QR Code Display -->
   <div id="qrcode-container">
     <div id="qrcode"></div>
   </div>
 
-  <!-- Scan Button -->
+  <!-- Camera Scanner Button -->
   <button id="scan-btn">📷 Scan Barcode</button>
 
-  <!-- Scanner Video Stream -->
+  <!-- Camera Preview -->
   <div id="scanner"></div>
 
   <!-- RDAC Input -->
   <input id="rdac-input" type="text" placeholder="Scan RDAC barcode..." autocomplete="off" />
 
-  <!-- Button Section -->
+  <!-- Bottom Buttons -->
   <div class="button-container">
     <button id="left-btn" class="large-button">Left</button>
     <button id="right-btn" class="large-button">Right</button>
@@ -125,7 +122,7 @@
 
     let qr;
 
-    // Handle input from scanner or manual entry
+    // Input handler (manual or scanner)
     rdacInput.addEventListener('input', (e) => {
       let value = e.target.value.replace(/^F12/i, '');
       if (value.length > 30) value = value.slice(0, 30);
@@ -141,7 +138,6 @@
 
     function showQRCode() {
       if (!rdacCode) return;
-
       qrcodeDiv.innerHTML = '';
       qr = new QRCode(qrcodeDiv, {
         text: rdacCode,
@@ -151,7 +147,6 @@
         colorLight: "#ffffff",
         correctLevel: QRCode.CorrectLevel.H
       });
-
       qrcodeContainer.style.display = 'flex';
     }
 
@@ -179,7 +174,7 @@
         hideQRCode();
       });
 
-    // Scanner logic
+    // Barcode scanner logic
     let html5Qrcode;
 
     function startScanner() {
@@ -190,7 +185,12 @@
 
       Html5Qrcode.getCameras().then(devices => {
         if (devices && devices.length) {
-          const cameraId = devices[0].id;
+          // Try to select the front-facing camera
+          const frontCam = devices.find(d =>
+            d.label.toLowerCase().includes("front") || d.label.toLowerCase().includes("user")
+          );
+          const cameraId = frontCam ? frontCam.id : devices[0].id;
+
           html5Qrcode.start(
             cameraId,
             { fps: 10, qrbox: { width: 250, height: 100 } },
@@ -199,12 +199,12 @@
               rdacInput.dispatchEvent(new Event('input'));
             },
             (errorMessage) => {
-              // Optional: console.log(errorMessage);
+              // console.log("Scan error", errorMessage);
             }
           );
         }
       }).catch(err => {
-        alert("Unable to access camera.");
+        alert("Unable to access camera: " + err);
       });
     }
 
