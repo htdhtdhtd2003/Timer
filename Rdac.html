@@ -1,173 +1,234 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Barcode Scanner + QR Code</title>
-  <style>
-    html, body {
-      margin: 0; padding: 0; height: 100%;
-    }
-    body {
-      font-family: Arial, sans-serif;
-      display: block;
-    }
-    /* Scanner container top half */
-    #scanner {
-      width: 100%;
-      height: 50vh;
-      background: #ddd;
-      display: none; /* hidden initially */
-    }
-    /* Input field */
-    #rdac-input {
-      width: 90%;
-      margin: 10px auto 5px;
-      display: block;
-      font-size: 1.2rem;
-      padding: 10px;
-    }
-    /* QR code container below input */
-    #qrcode {
-      width: 150px;
-      height: 150px;
-      margin: 0 auto 15px;
-    }
-    /* Buttons container bottom half */
-    #buttons-container {
-      width: 100%;
-      height: 50vh;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      gap: 20px;
-      padding: 20px;
-      box-sizing: border-box;
-    }
-    #buttons-container button {
-      width: 90%;
-      height: 60px;
-      font-size: 1.5rem;
-      border-radius: 8px;
-      border: none;
-      cursor: pointer;
-    }
-    #scan-btn {
-      background-color: #28a745;
-      color: white;
-    }
-    #toggle-camera-btn {
-      background-color: #ffc107;
-    }
-  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RDAC QR Scanner</title>
+  
+  <!-- QR Code Generator -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  
+  <!-- QR Code Scanner -->
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f0f0f0;
+    }
+
+    #qrcode-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 50vh;
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: white;
+      z-index: 1000;
+      border-bottom: 2px solid #ccc;
+    }
+
+    #qrcode {
+      width: 50vmin;
+      height: 50vmin;
+    }
+
+    #rdac-input {
+      width: 100%;
+      font-size: 1.5rem;
+      padding: 12px;
+      margin-top: 52vh;
+    }
+
+    #reader {
+      width: 100%;
+      max-width: 400px;
+      margin: 1rem auto;
+    }
+
+    .button-container {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      z-index: 1000;
+    }
+
+    .large-button {
+      padding: 20px 40px;
+      font-size: 1.5rem;
+      border: none;
+      background-color: #007bff;
+      color: white;
+      border-radius: 8px;
+      flex: 1;
+      max-width: 200px;
+      touch-action: manipulation;
+    }
+
+    #camera-toggle {
+      margin: 1rem auto;
+      text-align: center;
+    }
+
+    button:active {
+      opacity: 0.8;
+    }
+  </style>
 </head>
 <body>
 
-  <div id="scanner"></div>
+  <!-- QR Code Display Section -->
+  <div id="qrcode-container">
+    <div id="qrcode"></div>
+  </div>
 
-  <input id="rdac-input" type="text" placeholder="Scan RDAC barcode..." autocomplete="off" />
+  <!-- RDAC Input -->
+  <input id="rdac-input" type="text" placeholder="Scan RDAC barcode..." autocomplete="off" />
 
-  <div id="qrcode"></div>
+  <!-- QR Scanner -->
+  <div id="reader"></div>
+  <div id="camera-toggle">
+    <button onclick="switchCamera()">Switch Camera</button>
+  </div>
 
-  <div id="buttons-container">
-    <button id="scan-btn">📷 Scan Barcode</button>
-    <button id="toggle-camera-btn">🔄 Switch Camera</button>
-  </div>
+  <!-- Button Section -->
+  <div class="button-container">
+    <button id="left-btn" class="large-button">Left</button>
+    <button id="right-btn" class="large-button">Right</button>
+  </div>
 
-  <!-- QRCode.js library for generating QR codes -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <script src="https://unpkg.com/html5-qrcode"></script>
-  <script>
-    const scannerDiv = document.getElementById('scanner');
-    const scanBtn = document.getElementById('scan-btn');
-    const toggleBtn = document.getElementById('toggle-camera-btn');
-    const rdacInput = document.getElementById('rdac-input');
-    const qrcodeContainer = document.getElementById('qrcode');
+  <script>
+    let rdacCode = '';
+    let leftHeld = false;
+    let rightHeld = false;
 
-    let html5Qrcode;
-    let scannerStarted = false;
-    let currentCameraId = null;
-    let cameras = [];
-    let isFrontCamera = true;
-    let qrCode;
+    const rdacInput = document.getElementById('rdac-input');
+    const qrcodeContainer = document.getElementById('qrcode-container');
+    const qrcodeDiv = document.getElementById('qrcode');
 
-    // Create QR code instance
-    function generateQRCode(text) {
-      qrcodeContainer.innerHTML = ""; // clear old
-      qrCode = new QRCode(qrcodeContainer, {
-        text: text,
-        width: 150,
-        height: 150,
-        colorDark: "#000000",
-        colorLight: "#ffffff",
-        correctLevel: QRCode.CorrectLevel.H
-      });
-    }
+    let qr;
+    let currentCameraId = null;
+    let cameraList = [];
+    let isBackCamera = true;
 
-    function startScanner() {
-      if (scannerStarted) return;
-      scannerStarted = true;
-      scannerDiv.style.display = "block";
-      html5Qrcode = new Html5Qrcode("scanner");
-      Html5Qrcode.getCameras().then(devices => {
-        cameras = devices;
-        if (devices.length === 0) {
-          alert("No cameras found");
-          return;
-        }
-        let chosenCamera = isFrontCamera
-          ? devices.find(cam => cam.label.toLowerCase().includes("front")) || devices[0]
-          : devices.find(cam => cam.label.toLowerCase().includes("back")) || devices[0];
+    const html5QrCode = new Html5Qrcode("reader");
 
-        currentCameraId = chosenCamera.id;
+    // Input barcode handler
+    rdacInput.addEventListener('input', (e) => {
+      let value = e.target.value.replace(/^F12/i, '').slice(0, 30);
+      e.target.value = value;
+      rdacCode = value;
 
-        html5Qrcode.start(
-          currentCameraId,
-          { fps: 10, qrbox: 250 },
-          decodedText => {
-            rdacInput.value = decodedText;
-            generateQRCode(decodedText);
-            stopScanner();
-          },
-          errorMessage => {
-            // ignore scanning errors
-          }
-        );
-      }).catch(err => alert("Error accessing cameras: " + err));
-    }
+      if (value.length === 30) {
+        e.target.style.display = 'none';
+        stopScanner();
+      }
+    });
 
-    function stopScanner() {
-      if (html5Qrcode) {
-        html5Qrcode.stop().then(() => {
-          scannerDiv.style.display = "none";
-          html5Qrcode.clear();
-          scannerStarted = false;
-        }).catch(console.error);
-      }
-    }
+    // Show QR Code
+    function showQRCode() {
+      if (!rdacCode) return;
 
-    function toggleCamera() {
-      if (!scannerStarted) return;
-      isFrontCamera = !isFrontCamera;
-      stopScanner();
-      setTimeout(startScanner, 300);
-    }
+      qrcodeDiv.innerHTML = '';
+      qr = new QRCode(qrcodeDiv, {
+        text: rdacCode,
+        width: qrcodeDiv.clientWidth,
+        height: qrcodeDiv.clientHeight,
+        colorDark: "#000",
+        colorLight: "#fff",
+        correctLevel: QRCode.CorrectLevel.H
+      });
 
-    // Update QR code when user manually edits input
-    rdacInput.addEventListener('input', e => {
-      const val = e.target.value.trim();
-      if (val) {
-        generateQRCode(val);
-      } else {
-        qrcodeContainer.innerHTML = "";
-      }
-    });
+      qrcodeContainer.style.display = 'flex';
+    }
 
-    scanBtn.addEventListener('click', startScanner);
-    toggleBtn.addEventListener('click', toggleCamera);
-  </script>
+    function hideQRCode() {
+      qrcodeContainer.style.display = 'none';
+      qrcodeDiv.innerHTML = '';
+    }
+
+    // Button press handlers
+    function bindHold(button, onDown, onUp) {
+      button.addEventListener('touchstart', onDown);
+      button.addEventListener('touchend', onUp);
+      button.addEventListener('mousedown', onDown);
+      button.addEventListener('mouseup', onUp);
+    }
+
+    bindHold(document.getElementById('left-btn'), () => leftHeld = true, () => leftHeld = false);
+    bindHold(document.getElementById('right-btn'), () => {
+      rightHeld = true;
+      if (leftHeld) showQRCode();
+    }, () => {
+      rightHeld = false;
+      hideQRCode();
+    });
+
+    // QR SCANNER SETUP
+    function startScanner() {
+      Html5Qrcode.getCameras().then(devices => {
+        cameraList = devices;
+        currentCameraId = isBackCamera ? getBackCameraId(devices) : devices[0]?.id;
+
+        if (!currentCameraId) {
+          alert("No camera found.");
+          return;
+        }
+
+        html5QrCode.start(
+          currentCameraId,
+          {
+            fps: 10,
+            qrbox: { width: 250, height: 250 }
+          },
+          qrCodeMessage => {
+            rdacCode = qrCodeMessage.slice(0, 30);
+            rdacInput.value = rdacCode;
+            rdacInput.style.display = 'none';
+            stopScanner();
+          },
+          error => {
+            // console.log("QR scan error", error);
+          }
+        );
+      });
+    }
+
+    function stopScanner() {
+      html5QrCode.stop().then(() => {
+        document.getElementById("reader").innerHTML = '';
+      });
+    }
+
+    function getBackCameraId(devices) {
+      return devices.find(d => /back|rear/i.test(d.label))?.id || devices[0]?.id;
+    }
+
+    function switchCamera() {
+      isBackCamera = !isBackCamera;
+      stopScanner();
+      startScanner();
+    }
+
+    // Start scanning on load
+    window.onload = () => {
+      startScanner();
+      rdacInput.focus();
+    };
+  </script>
 
 </body>
 </html>
