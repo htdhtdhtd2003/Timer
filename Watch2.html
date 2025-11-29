@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Voice Counter — Continuous Listening</title>
+<style>
+  body {
+    margin: 0; padding: 20px;
+    font-family: Arial, sans-serif;
+    background: #0c1222;
+    color: #e5ecf5;
+    text-align: center;
+  }
+  .box {
+    margin: 20px auto;
+    padding: 20px;
+    max-width: 420px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+  }
+  .count {
+    font-size: 48px;
+    margin: 20px 0;
+    font-weight: bold;
+  }
+  button {
+    padding: 10px 18px;
+    font-size: 16px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.08);
+    color: white;
+    cursor: pointer;
+  }
+  #status {
+    margin-top: 10px;
+    font-size: 13px;
+    opacity: 0.8;
+  }
+</style>
+</head>
+<body>
+
+<h1>Voice Counter — Say “start” / “stop”</h1>
+<p>Continuous always-listening voice control + count out loud every second.</p>
+
+<div class="box">
+  <div class="count" id="countDisplay">0</div>
+  <button id="startBtn">Start (manual)</button>
+  <button id="stopBtn">Stop</button>
+  <button id="resetBtn">Reset</button>
+  <div id="status">Voice: initializing…</div>
+</div>
+
+<script>
+//////////////////////////////////////////////////////
+//  COUNTING LOGIC
+//////////////////////////////////////////////////////
+let counting = false;
+let countValue = 0;
+let timer = null;
+
+function speak(text) {
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.rate = 1; 
+  utter.pitch = 1;
+  speechSynthesis.speak(utter);
+}
+
+function startCounting() {
+  if (counting) return;
+  counting = true;
+  timer = setInterval(() => {
+    countValue++;
+    document.getElementById("countDisplay").textContent = countValue;
+    speak(countValue);
+  }, 1000);
+  document.getElementById("status").textContent = "Counting…";
+}
+
+function stopCounting() {
+  counting = false;
+  clearInterval(timer);
+  document.getElementById("status").textContent = "Stopped";
+}
+
+function resetCounting() {
+  stopCounting();
+  countValue = 0;
+  document.getElementById("countDisplay").textContent = "0";
+  document.getElementById("status").textContent = "Reset";
+}
+
+document.getElementById("startBtn").onclick = startCounting;
+document.getElementById("stopBtn").onclick = stopCounting;
+document.getElementById("resetBtn").onclick = resetCounting;
+
+//////////////////////////////////////////////////////
+//  CONTINUOUS VOICE LISTENING (NO BEEPS AFTER PERMISSION)
+//////////////////////////////////////////////////////
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+let recognition;
+let forceRestart = true;
+
+if (!SpeechRecognition) {
+  document.getElementById("status").textContent = "Speech recognition not supported.";
+} else {
+  recognition = new SpeechRecognition();
+  recognition.lang = "en-US";
+  recognition.continuous = true;
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
+
+  recognition.onstart = () => {
+    document.getElementById("status").textContent = "Listening (say 'start' or 'stop')…";
+  };
+
+  recognition.onresult = (event) => {
+    let spoken = event.results[event.results.length - 1][0].transcript.toLowerCase().trim();
+    console.log("Heard:", spoken);
+
+    if (spoken.includes("start")) {
+      startCounting();
+    }
+    if (spoken.includes("stop")) {
+      stopCounting();
+    }
+    if (spoken.includes("reset")) {
+      resetCounting();
+    }
+  };
+
+  recognition.onerror = (ev) => {
+    console.warn("Voice error", ev.error);
+  };
+
+  recognition.onend = () => {
+    // Continuous auto-restart (no beep)
+    if (forceRestart) {
+      setTimeout(() => {
+        try { recognition.start(); } catch(e) {}
+      }, 200);
+    }
+  };
+
+  // Start immediately
+  try {
+    recognition.start();
+  } catch(e) {}
+}
+</script>
+
+</body>
+</html>
