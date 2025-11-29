@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Voice Stopwatch — "start" / "stop"</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #0b1220;
+      --accent: #06b6d4;
+      --muted: #94a3b8;
+      --glass: rgba(255,255,255,0.04);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(180deg, #071031 0%, #081226 100%);
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      color: #e6eef8;
+      padding: 24px;
+    }
+    .card {
+      width: 100%;
+      max-width: 520px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border: 1px solid rgba(255,255,255,0.04);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 8px 30px rgba(2,6,23,0.6);
+    }
+    h1 { margin: 0 0 8px 0; font-size: 20px; }
+    p.lead { margin: 0 0 18px 0; color: var(--muted); font-size: 13px; }
+    .time {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Courier New", monospace;
+      font-size: 48px;
+      text-align: center;
+      padding: 18px 8px;
+      border-radius: 8px;
+      background: var(--glass);
+      border: 1px solid rgba(255,255,255,0.02);
+      margin-bottom: 14px;
+    }
+    .controls { display:flex; gap:8px; justify-content:center; margin-bottom:12px; }
+    button {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.08);
+      color: inherit;
+      padding: 10px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    button.primary {
+      background: linear-gradient(90deg, rgba(6,182,212,0.12), rgba(99,102,241,0.08));
+      border: 1px solid rgba(6,182,212,0.32);
+      box-shadow: 0 6px 18px rgba(6,182,212,0.06);
+    }
+    .status { text-align:center; color:var(--muted); font-size:13px; margin-top:6px; }
+    .chip { display:inline-block; padding:6px 10px; border-radius:999px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.03); margin-left:8px; color:var(--muted); font-size:12px; }
+    footer { margin-top:12px; font-size:12px; color:var(--muted); text-align:center; }
+    .hidden { display:none !important; }
+  </style>
+</head>
+<body>
+  <main class="card" role="main" aria-labelledby="title">
+    <h1 id="title">Voice Stopwatch — say "start" / "stop"</h1>
+    <p class="lead">Allow microphone access and say <strong>start</strong> to begin and <strong>stop</strong> to stop. Use the buttons to control manually.</p>
+
+    <div class="time" id="display" aria-live="polite">00:00:00.00</div>
+
+    <div class="controls" role="group" aria-label="Stopwatch controls">
+      <button id="manual-start" class="primary" aria-pressed="false">Start</button>
+      <button id="manual-stop">Stop</button>
+      <button id="reset">Reset</button>
+      <button id="mic-toggle" title="Toggle voice recognition">🎤 Enable voice</button>
+    </div>
+
+    <div class="status" id="status">Voice recognition: <span id="voice-state">disabled</span><span class="chip" id="listening-chip">not listening</span></div>
+
+    <footer>
+      Works best in Chromium-based browsers (Chrome/Edge) on desktop or mobile. If voice doesn't start, click the microphone button and grant permission.
+    </footer>
+  </main>
+
+  <script>
+    // --- Stopwatch logic (accurate using performance.now) ---
+    let running = false;
+    let startPerf = 0;        // performance.now() when started
+    let elapsedBefore = 0;    // accumulated ms from previous runs
+    let rafId = null;
+
+    const display = document.getElementById('display');
+
+    function formatTime(ms) {
+      // ms is milliseconds
+      const totalHundredths = Math.floor(ms / 10);
+      const hundredths = totalHundredths % 100;
+      const totalSeconds = Math.floor(ms / 1000);
+      const seconds = totalSeconds % 60;
+      const totalMinutes = Math.floor(totalSeconds / 60);
+      const minutes = totalMinutes % 60;
+      const hours = Math.floor(totalMinutes / 60);
+      return String(hours).padStart(2,'0') + ':' +
+             String(minutes).padStart(2,'0') + ':' +
+             String(seconds).padStart(2,'0') + '.' +
+             String(hundredths).padStart(2,'0');
+    }
+
+    function updateDisplay() {
+      const now = performance.now();
+      const elapsed = (running ? (now - startPerf) + elapsedBefore : elapsedBefore);
+      display.textContent = formatTime(elapsed);
+    }
+
+    function tick() {
+      updateDisplay();
+      rafId = requestAnimationFrame(tick);
+    }
+
+    function startStopwatch() {
+      if (running) return;
+      startPerf = performance.now();
+      running = true;
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(tick);
+      setStatusText('running');
+    }
+
+    function stopStopwatch() {
+      if (!running) return;
+      const now = performance.now();
+      elapsedBefore += now - startPerf;
+      running = false;
+      cancelAnimationFrame(rafId);
+      updateDisplay();
+      setStatusText('stopped');
+    }
+
+    function resetStopwatch() {
+      running = false;
+      elapsedBefore = 0;
+      startPerf = 0;
+      cancelAnimationFrame(rafId);
+      updateDisplay();
+      setStatusText('reset');
+    }
+
+    // --- Buttons ---
+    document.getElementById('manual-start').addEventListener('click', startStopwatch);
+    document.getElementById('manual-stop').addEventListener('click', stopStopwatch);
+    document.getElementById('reset').addEventListener('click', resetStopwatch);
+
+    // --- Voice recognition setup ---
+    const voiceState = document.getElementById('voice-state');
+    const micToggle = document.getElementById('mic-toggle');
+    const listeningChip = document.getElementById('listening-chip');
+
+    let recognition = null;
+    let listening = false;
+
+    // Feature detection for Web Speech API
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition || null;
+
+    function setStatusText(text) {
+      // small helper to update status chip and voice-state area
+      const vs = document.getElementById('voice-state');
+      if (text === 'listening') {
+        listeningChip.textContent = 'listening';
+        listeningChip.style.background = 'rgba(6,182,212,0.06)';
+      } else if (text === 'running') {
+        vs.textContent = 'enabled — stopwatch running';
+      } else if (text === 'stopped') {
+        vs.textContent = 'enabled — stopwatch stopped';
+      } else if (text === 'reset') {
+        vs.textContent = 'enabled — reset';
+        listeningChip.textContent = 'not listening';
+      } else if (text === 'disabled') {
+        vs.textContent = 'disabled';
+        listeningChip.textContent = 'not listening';
+      } else {
+        vs.textContent = text;
+      }
+    }
+
+    if (!SpeechRecognition) {
+      // If not supported, disable mic button
+      micToggle.disabled = true;
+      micToggle.title = 'Voice recognition not supported by this browser';
+      setStatusText('disabled');
+    } else {
+      // Create recognition object
+      recognition = new SpeechRecognition();
+      recognition.lang = 'en-US';
+      recognition.continuous = true;      // keep capturing until stopped
+      recognition.interimResults = false; // only final results
+      recognition.maxAlternatives = 1;
+
+      recognition.onstart = () => {
+        listening = true;
+        micToggle.textContent = '🎤 Disable voice';
+        listeningChip.textContent = 'listening';
+        setStatusText(running ? 'running' : 'enabled');
+      };
+
+      recognition.onend = () => {
+        listening = false;
+        // If user toggled mic off, do not restart.
+        micToggle.textContent = '🎤 Enable voice';
+        listeningChip.textContent = 'not listening';
+        // If we want continuous listening even after end events caused by browser,
+        // we could restart here if micToggle indicates enabled. For predictable behavior,
+        // we will restart recognition only when user hasn't toggled off.
+        if (micToggle.dataset.enabled === 'true') {
+          // small delay then restart to handle some browser quirks
+          setTimeout(() => {
+            try { recognition.start(); } catch(e) { /* ignore duplicate start errors */ }
+          }, 250);
+        }
+      };
+
+      recognition.onerror = (ev) => {
+        console.warn('SpeechRecognition error', ev);
+        // Provide quick feedback in UI
+        if (ev.error === 'not-allowed' || ev.error === 'permission-denied') {
+          setStatusText('permission denied');
+          micToggle.textContent = '🎤 Enable voice';
+          micToggle.dataset.enabled = 'false';
+        } else {
+          setStatusText(ev.error || 'error');
+        }
+      };
+
+      recognition.onresult = (event) => {
+        // event.results is a SpeechRecognitionResultList
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const res = event.results[i];
+          if (res.isFinal) {
+            const spoken = res[0].transcript.trim().toLowerCase();
+            // console.log('Heard:', spoken);
+            // Robust matching: check words presence
+            // We look for full word "start" or "stop" (not substring).
+            const words = spoken.split(/\s+/);
+            // Also accept phrases like "start timer" or exactly "start"
+            if (words.includes('start')) {
+              startStopwatch();
+            } else if (words.includes('stop')) {
+              stopStopwatch();
+            }
+            // optionally: support "reset" voice command
+            else if (words.includes('reset')) {
+              resetStopwatch();
+            }
+            // else ignore
+          }
+        }
+      };
+    }
+
+    micToggle.addEventListener('click', async () => {
+      if (!SpeechRecognition) return;
+      // Toggle
+      const enabled = micToggle.dataset.enabled === 'true';
+      if (enabled) {
+        // turn off
+        micToggle.dataset.enabled = 'false';
+        micToggle.textContent = '🎤 Enable voice';
+        try { recognition.stop(); } catch(e) {}
+        listeningChip.textContent = 'not listening';
+        voiceState.textContent = 'disabled';
+      } else {
+        // turn on
+        micToggle.dataset.enabled = 'true';
+        try {
+          recognition.start();
+          micToggle.textContent = '🎤 Disable voice';
+          voiceState.textContent = 'enabled';
+        } catch (err) {
+          // Some browsers throw when start is called too quickly or twice.
+          console.error('recognition.start error', err);
+          try { recognition.stop(); } catch(e) {}
+          setTimeout(() => {
+            try { recognition.start(); } catch(e2) { console.error(e2); setStatusText('error starting voice'); }
+          }, 300);
+        }
+      }
+    });
+
+    // Accessibility: allow keyboard shortcut "v" to toggle mic
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'v' || e.key === 'V') {
+        micToggle.click();
+      }
+    });
+
+    // Initialize display at load
+    updateDisplay();
+    setStatusText('disabled');
+
+    // Expose start/stop for debugging in console
+    window.voiceStopwatch = { startStopwatch, stopStopwatch, resetStopwatch };
+
+    // Helpful: ask for permission proactively if user enabled voice previously (not persisted here).
+    // To keep UI predictable we only request when user clicks the mic.
+  </script>
+</body>
+</html>
