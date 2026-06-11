@@ -1,0 +1,5 @@
+
+body{margin:0;overflow:hidden;font-family:Arial}
+canvas{display:block;background:#ece6d5}
+#hud{position:fixed;top:10px;left:10px;background:#0008;color:#fff;padding:8px;border-radius:8px}
+#prank{position:fixed;right:20px;bottom:20px;padding:16px;font-size:22px}
